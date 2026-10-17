@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cofdtld Translator · English ⇄ Cofdtld</title>
+<style>
+  :root{
+    --bg:#0a0d16; --line:rgba(255,255,255,.09);
+    --accent:#7ee0c8; --accent2:#8ab4ff; --text:#e6ecf5; --muted:#8b9bb4;
+    --warn:#f0c674;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; padding:34px 20px 70px;
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+    color:var(--text);
+    background:
+      radial-gradient(1100px 560px at 15% -12%, #1b2a4a 0%, transparent 62%),
+      radial-gradient(900px 520px at 92% -6%, #2a1b3d 0%, transparent 58%),
+      var(--bg);
+    background-attachment:fixed; min-height:100%; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{ max-width:820px; margin:0 auto; }
+  h1{
+    font-size:clamp(1.7rem,4vw,2.4rem); margin:0 0 6px; letter-spacing:.03em;
+    background:linear-gradient(92deg,#7ee0c8,#8ab4ff 60%,#c39bff);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .sub{ margin:0; color:var(--muted); font-size:.88rem; line-height:1.6; }
+  .back{ display:inline-block; margin-top:10px; color:var(--accent2); font-size:.8rem; text-decoration:none; }
+  .back:hover{ text-decoration:underline; }
+
+  .panel{
+    margin-top:22px; background:rgba(255,255,255,.035);
+    border:1px solid var(--line); border-radius:16px; padding:20px;
+  }
+  textarea{
+    width:100%; min-height:86px; resize:vertical;
+    background:rgba(0,0,0,.25); border:1px solid var(--line); border-radius:11px;
+    color:var(--text); font-size:1rem; font-family:inherit; padding:14px;
+    outline:none; transition:.2s;
+  }
+  textarea:focus{ border-color:rgba(126,224,200,.55); box-shadow:0 0 0 3px rgba(126,224,200,.1); }
+  .row{ display:flex; flex-wrap:wrap; gap:10px; margin-top:12px; align-items:center; }
+  button{
+    font-family:inherit; font-size:.9rem; cursor:pointer; border-radius:10px;
+    padding:11px 20px; border:1px solid transparent; transition:.18s;
+  }
+  .primary{ background:var(--accent); color:#0a0d16; font-weight:700; }
+  .primary:hover{ background:var(--accent2); }
+  .ghost{ background:rgba(255,255,255,.05); border-color:var(--line); color:var(--muted); }
+  .ghost:hover{ color:var(--text); border-color:rgba(255,255,255,.22); }
+  .langtag{
+    margin-left:auto; font-size:.76rem; color:var(--muted);
+    border:1px solid var(--line); padding:4px 10px; border-radius:999px;
+  }
+  .langtag b{ color:var(--accent); font-weight:600; }
+
+  .result{ margin-top:18px; display:none; }
+  .result.show{ display:block; animation:fade .25s ease; }
+  @keyframes fade{ from{opacity:0; transform:translateY(-5px);} to{opacity:1; transform:none;} }
+  .out-label{ font-size:.72rem; letter-spacing:.14em; color:var(--muted); text-transform:uppercase; margin-bottom:8px; }
+  .out{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:1.5rem; line-height:1.5; color:var(--accent); word-break:break-word;
+    background:rgba(0,0,0,.22); border:1px solid var(--line); border-radius:12px;
+    padding:16px 18px;
+  }
+  .out .unk{ color:var(--warn); }
+  .gloss{ margin-top:12px; font-size:.82rem; line-height:2; color:var(--muted); }
+  .gloss span{ margin-right:14px; white-space:nowrap; }
+  .gloss b{ color:var(--text); font-weight:600; }
+  .gloss .g-unk{ color:var(--warn); }
+
+  .hint{ margin-top:12px; font-size:.78rem; color:#6d7d95; line-height:1.7; }
+  .hint code{ color:var(--accent2); font-family:ui-monospace,monospace; }
+
+  .examples{ display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+  .examples button{
+    font-size:.78rem; padding:6px 12px; border-radius:999px;
+    background:rgba(255,255,255,.04); border:1px solid var(--line); color:var(--muted);
+  }
+  .examples button:hover{ color:var(--accent); border-color:rgba(126,224,200,.5); }
+
+  .dict{ margin-top:26px; }
+  .dict h2{ font-size:.95rem; color:var(--muted); font-weight:500; letter-spacing:.08em; margin:0 0 12px; }
+  .dict .search{
+    width:100%; background:rgba(0,0,0,.25); border:1px solid var(--line);
+    border-radius:10px; padding:11px 14px; color:var(--text); font-size:.9rem;
+    font-family:inherit; outline:none; margin-bottom:12px;
+  }
+  .dict .search:focus{ border-color:rgba(126,224,200,.5); }
+  .dict-list{ max-height:340px; overflow-y:auto; border:1px solid var(--line); border-radius:12px; }
+  .dict-item{
+    display:flex; gap:12px; align-items:baseline; padding:9px 14px;
+    border-bottom:1px solid rgba(255,255,255,.04); font-size:.85rem;
+  }
+  .dict-item:last-child{ border-bottom:none; }
+  .dict-item .c{ font-family:ui-monospace,monospace; color:var(--accent); min-width:88px; }
+  .dict-item .e{ color:var(--text); flex:1; }
+  .dict-item .z{ color:var(--muted); }
+  .dict-item .func{ font-size:.66rem; color:var(--accent2); border:1px solid rgba(138,180,255,.3); padding:1px 6px; border-radius:5px; }
+
+  footer{ margin-top:40px; text-align:center; color:#4d5a6e; font-size:.75rem; line-height:1.9; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Cofdtld Translator</h1>
+  <p class="sub">
+    A rule-based dictionary translator for the Cofdtld conlang.<br>
+    Type English or Chinese — it outputs Cofdtld words, with a word-by-word gloss below.
+  </p>
+  <a class="back" href="./">← back to the lexicon</a>
+
+  <div class="panel">
+    <textarea id="input" placeholder="e.g. I love you   /   Hello, friend!   /   我爱你"></textarea>
+    <div class="row">
+      <button class="primary" id="translate">Translate →</button>
+      <button class="ghost" id="clear">Clear</button>
+      <span class="langtag" id="langtag">detected: <b>—</b></span>
+    </div>
+    <div class="examples" id="examples"></div>
+
+    <div class="result" id="result">
+      <div class="out-label">Cofdtld</div>
+      <div class="out" id="out"></div>
+      <div class="gloss" id="gloss"></div>
+    </div>
+  </div>
+
+  <div class="dict">
+    <h2>DICTIONARY LOOKUP</h2>
+    <input class="search" id="dictsearch" placeholder="Search Cofdtld / English / 中文…">
+    <div class="dict-list" id="dictlist"></div>
+  </div>
+
+  <footer>
+    Core lexicon: 75 words · translator adds 23 function words marked <span style="color:#8ab4ff">func</span><br>
+    This is a dictionary-based translator, not full machine translation. Unknown words are marked in yellow.
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   词库：核心 75 词 + 23 个翻译功能词
+   core:false 表示翻译器扩展词，页面上会标注
+   ============================================================ */
+const ENTRIES = [
+  /* -------- 核心 75 -------- */
+  {cof:"cofdtld",en:["hello","hi"],zh:["你好"],pos:"interj",cat:"greeting",core:true},
+  {cof:"vren",en:["goodbye","bye"],zh:["再见"],pos:"interj",cat:"greeting",core:true},
+  {cof:"thalm",en:["thanks","thank"],zh:["谢谢","感谢"],pos:"interj",cat:"greeting",core:true},
+  {cof:"skorv",en:["please"],zh:["请"],pos:"adv",cat:"greeting",core:true},
+  {cof:"nu",en:["yes","is","am","are","be"],zh:["是","对","确实"],pos:"copula",cat:"greeting",core:true},
+  {cof:"dro",en:["no","not"],zh:["不","不是","没"],pos:"particle",cat:"greeting",core:true},
+  {cof:"kem",en:["i","me","my"],zh:["我"],pos:"pron",cat:"pronoun",core:true},
+  {cof:"ta",en:["you","your"],zh:["你"],pos:"pron",cat:"pronoun",core:true},
+  {cof:"vor",en:["he","him","his"],zh:["他"],pos:"pron",cat:"pronoun",core:true},
+  {cof:"lind",en:["she","her","hers"],zh:["她"],pos:"pron",cat:"pronoun",core:true},
+  {cof:"osk",en:["we","us","our"],zh:["我们"],pos:"pron",cat:"pronoun",core:true},
+  {cof:"zhal",en:["they","them","their"],zh:["他们","她们"],pos:"pron",cat:"pronoun",core:true},
+  {cof:"sek",en:["it","its"],zh:["它"],pos:"pron",cat:"pronoun",core:true},
+  {cof:"plav",en:["water"],zh:["水"],pos:"n",cat:"nature",core:true},
+  {cof:"krost",en:["fire","flame"],zh:["火","火焰"],pos:"n",cat:"nature",core:true},
+  {cof:"neld",en:["earth","land"],zh:["土地","大地"],pos:"n",cat:"nature",core:true},
+  {cof:"zhurn",en:["sky"],zh:["天空"],pos:"n",cat:"nature",core:true},
+  {cof:"vask",en:["sun"],zh:["太阳"],pos:"n",cat:"nature",core:true},
+  {cof:"lurn",en:["moon"],zh:["月亮"],pos:"n",cat:"nature",core:true},
+  {cof:"sterv",en:["star","stars"],zh:["星星"],pos:"n",cat:"nature",core:true},
+  {cof:"bradn",en:["tree","trees"],zh:["树"],pos:"n",cat:"nature",core:true},
+  {cof:"klem",en:["flower","flowers"],zh:["花"],pos:"n",cat:"nature",core:true},
+  {cof:"groth",en:["mountain","mountains"],zh:["山"],pos:"n",cat:"nature",core:true},
+  {cof:"flund",en:["river"],zh:["河","河流"],pos:"n",cat:"nature",core:true},
+  {cof:"morv",en:["sea","ocean"],zh:["海","海洋"],pos:"n",cat:"nature",core:true},
+  {cof:"zolm",en:["light"],zh:["光","光亮"],pos:"n",cat:"nature",core:true},
+  {cof:"dusk",en:["darkness","dark"],zh:["黑暗","夜色"],pos:"n",cat:"nature",core:true},
+  {cof:"mirk",en:["name","what"],zh:["名字","什么"],pos:"n",cat:"people",core:true},
+  {cof:"drenth",en:["friend","friends"],zh:["朋友"],pos:"n",cat:"people",core:true},
+  {cof:"kav",en:["home","house"],zh:["家"],pos:"n",cat:"people",core:true},
+  {cof:"brent",en:["city"],zh:["城市"],pos:"n",cat:"people",core:true},
+  {cof:"tresh",en:["road","path"],zh:["路","道路"],pos:"n",cat:"people",core:true},
+  {cof:"kalf",en:["book","books"],zh:["书","书本"],pos:"n",cat:"people",core:true},
+  {cof:"nurg",en:["word","words"],zh:["词","词语"],pos:"n",cat:"people",core:true},
+  {cof:"plost",en:["sound","voice"],zh:["声音","嗓音"],pos:"n",cat:"people",core:true},
+  {cof:"drask",en:["song","songs"],zh:["歌","歌曲"],pos:"n",cat:"people",core:true},
+  {cof:"tesk",en:["story","stories"],zh:["故事","传说"],pos:"n",cat:"people",core:true},
+  {cof:"harn",en:["heart"],zh:["心","内心"],pos:"n",cat:"abstract",core:true},
+  {cof:"vlest",en:["love","loves"],zh:["爱","爱情"],pos:"n/v",cat:"abstract",core:true},
+  {cof:"sparn",en:["hope"],zh:["希望"],pos:"n",cat:"abstract",core:true},
+  {cof:"grald",en:["fear"],zh:["恐惧","害怕"],pos:"n",cat:"abstract",core:true},
+  {cof:"tarn",en:["time"],zh:["时间"],pos:"n",cat:"abstract",core:true},
+  {cof:"slom",en:["dream","dreams"],zh:["梦","梦境"],pos:"n",cat:"abstract",core:true},
+  {cof:"kriv",en:["life"],zh:["生命","生活"],pos:"n",cat:"abstract",core:true},
+  {cof:"mordt",en:["death"],zh:["死","死亡"],pos:"n",cat:"abstract",core:true},
+  {cof:"velt",en:["world"],zh:["世界"],pos:"n",cat:"abstract",core:true},
+  {cof:"brolk",en:["eat","eats","ate","eating"],zh:["吃","进食"],pos:"v",cat:"action",core:true},
+  {cof:"flent",en:["drink","drinks","drank","drinking"],zh:["喝","饮用"],pos:"v",cat:"action",core:true},
+  {cof:"zark",en:["walk","walks","walked","walking"],zh:["走","行走"],pos:"v",cat:"action",core:true},
+  {cof:"plim",en:["run","runs","ran","running"],zh:["跑","奔跑"],pos:"v",cat:"action",core:true},
+  {cof:"vund",en:["see","sees","saw","seeing"],zh:["看","看见"],pos:"v",cat:"action",core:true},
+  {cof:"hrask",en:["hear","hears","heard","hearing"],zh:["听","听见"],pos:"v",cat:"action",core:true},
+  {cof:"klemd",en:["speak","speaks","spoke","say","says","said"],zh:["说","讲话"],pos:"v",cat:"action",core:true},
+  {cof:"nirth",en:["think","thinks","thought","thinking"],zh:["想","思考"],pos:"v",cat:"action",core:true},
+  {cof:"drost",en:["know","knows","knew","knowing"],zh:["知道","懂得"],pos:"v",cat:"action",core:true},
+  {cof:"grelt",en:["give","gives","gave","giving"],zh:["给","赠予"],pos:"v",cat:"action",core:true},
+  {cof:"slav",en:["take","takes","took","taking"],zh:["拿","取"],pos:"v",cat:"action",core:true},
+  {cof:"vronk",en:["come","comes","came","coming"],zh:["来","到来"],pos:"v",cat:"action",core:true},
+  {cof:"tsald",en:["go","goes","went","going"],zh:["去","前往"],pos:"v",cat:"action",core:true},
+  {cof:"mirv",en:["sleep","sleeps","slept","sleeping"],zh:["睡","睡觉"],pos:"v",cat:"action",core:true},
+  {cof:"kland",en:["big","large"],zh:["大","巨大"],pos:"adj",cat:"adj",core:true},
+  {cof:"zif",en:["small","little"],zh:["小","微小"],pos:"adj",cat:"adj",core:true},
+  {cof:"pravt",en:["good","fine"],zh:["好","美好"],pos:"adj",cat:"adj",core:true},
+  {cof:"nusk",en:["bad"],zh:["坏","糟糕"],pos:"adj",cat:"adj",core:true},
+  {cof:"tharn",en:["new"],zh:["新"],pos:"adj",cat:"adj",core:true},
+  {cof:"gold",en:["old"],zh:["老","旧"],pos:"adj",cat:"adj",core:true},
+  {cof:"vlim",en:["fast","quick"],zh:["快","迅速"],pos:"adj",cat:"adj",core:true},
+  {cof:"slord",en:["slow"],zh:["慢","缓慢"],pos:"adj",cat:"adj",core:true},
+  {cof:"kvarn",en:["hot","warm"],zh:["热","温暖"],pos:"adj",cat:"adj",core:true},
+  {cof:"frild",en:["cold"],zh:["冷","寒冷"],pos:"adj",cat:"adj",core:true},
+  {cof:"drovn",en:["one"],zh:["一"],pos:"num",cat:"num",core:true},
+  {cof:"tsek",en:["two"],zh:["二"],pos:"num",cat:"num",core:true},
+  {cof:"plorn",en:["three"],zh:["三"],pos:"num",cat:"num",core:true},
+  {cof:"kvar",en:["four"],zh:["四"],pos:"num",cat:"num",core:true},
+  {cof:"feln",en:["five"],zh:["五"],pos:"num",cat:"num",core:true},
+
+  /* -------- 翻译器扩展词 23 -------- */
+  {cof:"et",en:["and"],zh:["和"],pos:"conj",cat:"func",core:false},
+  {cof:"ov",en:["of"],zh:["的"],pos:"prep",cat:"func",core:false},
+  {cof:"in",en:["in","at","on"],zh:["在"],pos:"prep",cat:"func",core:false},
+  {cof:"tu",en:["to"],zh:["到"],pos:"prep",cat:"func",core:false},
+  {cof:"fram",en:["from"],zh:["从"],pos:"prep",cat:"func",core:false},
+  {cof:"vid",en:["with"],zh:["与"],pos:"prep",cat:"func",core:false},
+  {cof:"por",en:["for"],zh:["为了"],pos:"prep",cat:"func",core:false},
+  {cof:"kven",en:["who"],zh:["谁"],pos:"pron",cat:"func",core:false},
+  {cof:"kver",en:["where"],zh:["哪里"],pos:"adv",cat:"func",core:false},
+  {cof:"kvor",en:["why"],zh:["为什么"],pos:"adv",cat:"func",core:false},
+  {cof:"kvol",en:["how"],zh:["怎么"],pos:"adv",cat:"func",core:false},
+  {cof:"kvan",en:["when"],zh:["什么时候"],pos:"adv",cat:"func",core:false},
+  {cof:"hav",en:["have","has","had"],zh:["有"],pos:"v",cat:"func",core:false},
+  {cof:"volk",en:["want","wants","wanted"],zh:["想要"],pos:"v",cat:"func",core:false},
+  {cof:"kan",en:["can","could"],zh:["能"],pos:"v",cat:"func",core:false},
+  {cof:"dok",en:["do","does","did"],zh:["做"],pos:"v",cat:"func",core:false},
+  {cof:"zis",en:["this"],zh:["这"],pos:"pron",cat:"func",core:false},
+  {cof:"zat",en:["that"],zh:["那"],pos:"pron",cat:"func",core:false},
+  {cof:"seks",en:["six"],zh:["六"],pos:"num",cat:"func",core:false},
+  {cof:"sept",en:["seven"],zh:["七"],pos:"num",cat:"func",core:false},
+  {cof:"okt",en:["eight"],zh:["八"],pos:"num",cat:"func",core:false},
+  {cof:"non",en:["nine"],zh:["九"],pos:"num",cat:"func",core:false},
+  {cof:"dekn",en:["ten"],zh:["十"],pos:"num",cat:"func",core:false}
+];
+
+/* ---------- 构建索引 ---------- */
+const EN = new Map(), ZH = new Map(), COF = new Map();
+ENTRIES.forEach(e=>{
+  COF.set(e.cof,e);
+  e.en.forEach(w=>EN.set(w.toLowerCase(),e.cof));
+  e.zh.forEach(w=>ZH.set(w,e.cof));
+});
+
+const NUM_MAP = {"1":"drovn","2":"tsek","3":"plorn","4":"kvar","5":"feln",
+                 "6":"seks","7":"sept","8":"okt","9":"non","10":"dekn"};
+
+/* ============================================================
+   翻译核心
+   ============================================================ */
+function isChinese(s){ return /[\u4e00-\u9fa5]/.test(s); }
+
+/* --- 英文逐词解析 --- */
+function resolveEnglish(raw){
+  const w = raw.toLowerCase();
+  if (["the","a","an"].includes(w)) return {skip:true};
+  let cof = EN.get(w);
+  if (!cof && w.endsWith("s"))  cof = EN.get(w.slice(0,-1));
+  if (!cof && w.endsWith("es")) cof = EN.get(w.slice(0,-2));
+  if (!cof && w.endsWith("ed")) cof = EN.get(w.slice(0,-2));
+  if (!cof && w.endsWith("ing"))cof = EN.get(w.slice(0,-3));
+  return cof ? {cof} : {cof:null};
+}
+
+function translateEnglish(text){
+  const tokens = text.match(/[a-zA-Z']+|[0-9]+|[.,!?;:]|\s+/g) || [];
+  let out = "";
+  const glosses = [];
+  tokens.forEach(tok=>{
+    if (/^\s+$/.test(tok)){ out += " "; return; }
+    if (/^[.,!?;:]$/.test(tok)){ out = out.replace(/\s+$/,"") + tok; return; }
+    if (/^[0-9]+$/.test(tok)){
+      const cof = NUM_MAP[tok] || null;
+      if (cof){ out += (out?" ":"") + cof; glosses.push({cof, orig:tok}); }
+      else { out += (out?" ":"") + `[?${tok}]`; glosses.push({cof:`[?${tok}]`, orig:tok, unk:true}); }
+      return;
+    }
+    const r = resolveEnglish(tok);
+    if (r.skip) return;
+    if (r.cof){
+      out += (out?" ":"") + r.cof;
+      glosses.push({cof:r.cof, orig:tok});
+    } else {
+      out += (out?" ":"") + `[?${tok}]`;
+      glosses.push({cof:`[?${tok}]`, orig:tok, unk:true});
+    }
+  });
+  return {output: out.trim(), glosses};
+}
+
+/* --- 中文最大匹配分词 --- */
+function segmentChinese(text){
+  const tokens = [];
+  let i = 0;
+  const maxLen = 6;
+  while (i < text.length){
+    const ch = text[i];
+    if (/\s/.test(ch)){ tokens.push({type:"space"}); i++; continue; }
+    if (/[.,!?;:，。！？；：]/.test(ch)){ tokens.push({type:"punct", text:ch}); i++; continue; }
+    let matched = false;
+    for (let len = Math.min(maxLen, text.length - i); len >= 1; len--){
+      const chunk = text.slice(i, i+len);
+      if (ZH.has(chunk)){
+        tokens.push({type:"word", text:chunk, cof:ZH.get(chunk)});
+        i += len; matched = true; break;
+      }
+    }
+    if (!matched){ tokens.push({type:"word", text:ch, cof:null}); i++; }
+  }
+  return tokens;
+}
+
+function translateChinese(text){
+  const tokens = segmentChinese(text);
+  let out = "";
+  const glosses = [];
+  tokens.forEach(t=>{
+    if (t.type === "space") return;
+    if (t.type === "punct"){ out = out.replace(/\s+$/,"") + t.text; return; }
+    const cof = t.cof || `[?${t.text}]`;
+    out += (out?" ":"") + cof;
+    glosses.push({cof, orig:t.text, unk:!t.cof});
+  });
+  return {output: out.trim(), glosses};
+}
+
+/* ============================================================
+   UI
+   ============================================================ */
+const inputEl = document.getElementById("input");
+const langtag = document.getElementById("langtag");
+const resultEl = document.getElementById("result");
+const outEl = document.getElementById("out");
+const glossEl = document.getElementById("gloss");
+
+function updateLangTag(){
+  const v = inputEl.value.trim();
+  if (!v){ langtag.innerHTML = "detected: <b>—</b>"; return; }
+  langtag.innerHTML = isChinese(v)
+    ? "detected: <b>中文</b>"
+    : "detected: <b>English</b>";
+}
+inputEl.addEventListener("input", updateLangTag);
+
+function runTranslate(){
+  const text = inputEl.value.trim();
+  if (!text){ return; }
+  const zh = isChinese(text);
+  const res = zh ? translateChinese(text) : translateEnglish(text);
+
+  outEl.innerHTML = res.output
+    .split(/(\[\?[^\]]+\])/)
+    .map(part => part.startsWith("[?") ? `<span class="unk">${part}</span>` : part)
+    .join("");
+
+  glossEl.innerHTML = res.glosses.map(g =>
+    g.unk
+      ? `<span class="g-unk">${g.cof} <b>(${g.orig})</b></span>`
+      : `<span><b>${g.cof}</b> (${g.orig})</span>`
+  ).join("");
+
+  resultEl.classList.add("show");
+}
+
+document.getElementById("translate").addEventListener("click", runTranslate);
+document.getElementById("clear").addEventListener("click", ()=>{
+  inputEl.value = ""; resultEl.classList.remove("show"); updateLangTag();
+});
+inputEl.addEventListener("keydown", e=>{
+  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) runTranslate();
+});
+
+/* 示例 */
+const EXAMPLES = [
+  "I love you",
+  "Hello, friend!",
+  "We drink water",
+  "They come with a friend",
+  "我爱你",
+  "你好，朋友！",
+  "我们喝水",
+  "他想要一本书"
+];
+const exWrap = document.getElementById("examples");
+EXAMPLES.forEach(s=>{
+  const b = document.createElement("button");
+  b.textContent = s;
+  b.addEventListener("click", ()=>{
+    inputEl.value = s; updateLangTag(); runTranslate();
+  });
+  exWrap.appendChild(b);
+});
+
+/* 词典 */
+const dictList = document.getElementById("dictlist");
+const dictSearch = document.getElementById("dictsearch");
+
+function renderDict(q=""){
+  const query = q.trim().toLowerCase();
+  const list = ENTRIES.filter(e=>{
+    if (!query) return true;
+    return e.cof.includes(query)
+      || e.en.some(w=>w.includes(query))
+      || e.zh.some(w=>w.includes(query));
+  });
+  dictList.innerHTML = list.map(e=>`
+    <div class="dict-item">
+      <span class="c">${e.cof}</span>
+      <span class="e">${e.en.join(" / ")}</span>
+      <span class="z">${e.zh.join(" / ")}</span>
+      ${e.core ? "" : '<span class="func">func</span>'}
+    </div>
+  `).join("") || `<div class="dict-item"><span class="z">No matches.</span></div>`;
+}
+dictSearch.addEventListener("input", e=>renderDict(e.target.value));
+renderDict();
+
+/* 初始化 */
+updateLangTag();
+</script>
+</body>
+</html>
