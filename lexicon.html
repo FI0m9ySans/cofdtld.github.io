@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cofdtld 词库编辑器 · Lexicon Builder</title>
+<title>Cofdtld Lexicon Builder</title>
 <style>
   :root{
     --bg:#0a0d16; --line:rgba(255,255,255,.09);
@@ -22,6 +22,7 @@
     background-attachment:fixed; min-height:100%; -webkit-font-smoothing:antialiased;
   }
   .wrap{ max-width:1180px; margin:0 auto; }
+  .top{ display:flex; justify-content:space-between; align-items:flex-start; gap:16px; }
   h1{
     font-size:clamp(1.6rem,3.5vw,2.2rem); margin:0 0 6px; letter-spacing:.02em;
     background:linear-gradient(92deg,#7ee0c8,#8ab4ff 60%,#c39bff);
@@ -30,6 +31,20 @@
   .sub{ margin:0; color:var(--muted); font-size:.86rem; line-height:1.6; }
   .back{ display:inline-block; margin-top:8px; color:var(--accent2); font-size:.8rem; text-decoration:none; }
   .back:hover{ text-decoration:underline; }
+
+  .lang-switch{
+    display:flex; gap:4px; flex:none;
+    background:rgba(255,255,255,.04);
+    border:1px solid var(--line); border-radius:999px; padding:3px;
+  }
+  .lang-switch button{
+    padding:5px 13px; border-radius:999px; font-size:.78rem;
+    background:transparent; border:none; color:var(--muted);
+    cursor:pointer; font-family:inherit; transition:.18s;
+  }
+  .lang-switch button.active{
+    background:var(--accent); color:#0a0d16; font-weight:700;
+  }
 
   /* ---------- 文件工具栏 ---------- */
   .filebar{
@@ -53,8 +68,6 @@
   .primary:hover{ background:var(--accent2); }
   .ghost{ background:rgba(255,255,255,.05); border-color:var(--line); color:var(--muted); }
   .ghost:hover{ color:var(--text); border-color:rgba(255,255,255,.22); }
-  .danger{ background:rgba(255,123,123,.1); border-color:rgba(255,123,123,.35); color:var(--danger); }
-  .danger:hover{ background:rgba(255,123,123,.18); }
   .small{ font-size:.78rem; padding:6px 12px; }
 
   /* ---------- 主布局 ---------- */
@@ -74,7 +87,6 @@
     text-transform:uppercase; margin:0 0 16px; font-weight:500;
   }
 
-  /* ---------- 表单 ---------- */
   .field{ margin-bottom:13px; }
   .field label{
     display:block; font-size:.78rem; color:var(--muted);
@@ -94,8 +106,7 @@
   .field-row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .checkbox-label{
     display:flex; align-items:center; gap:8px;
-    font-size:.85rem; color:var(--text); cursor:pointer;
-    padding:6px 0;
+    font-size:.85rem; color:var(--text); cursor:pointer; padding:6px 0;
   }
   .checkbox-label input{ width:auto; accent-color:var(--accent); }
 
@@ -111,7 +122,6 @@
   .form-actions{ display:flex; gap:9px; margin-top:16px; }
   .form-actions button{ flex:1; }
 
-  /* ---------- 列表 ---------- */
   .list-head{ display:flex; gap:9px; margin-bottom:12px; }
   .search{
     flex:1; background:rgba(0,0,0,.25); border:1px solid var(--line);
@@ -158,7 +168,6 @@
   .item .acts .del:hover{ color:var(--danger); border-color:rgba(255,123,123,.4); }
   .item.editing{ background:rgba(126,224,200,.07); border-left:2px solid var(--accent); }
 
-  /* ---------- 导出 ---------- */
   .export{
     margin-top:22px; padding:20px;
     background:rgba(255,255,255,.035); border:1px solid var(--line); border-radius:16px;
@@ -175,7 +184,6 @@
     font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; outline:none;
   }
 
-  /* ---------- Toast ---------- */
   .toast{
     position:fixed; bottom:26px; left:50%; transform:translate(-50%,20px);
     background:#1c2438; border:1px solid rgba(126,224,200,.4); color:var(--text);
@@ -192,17 +200,25 @@
 <body>
 <div class="wrap">
 
-  <h1>Lexicon Builder</h1>
-  <p class="sub">添加、编辑、删除 Cofdtld 词条，保存为真实 JSON 文件，或从文件导入。</p>
-  <a class="back" href="./">← 返回词库</a>
+  <div class="top">
+    <div>
+      <h1 data-i18n="h1">Lexicon Builder</h1>
+      <p class="sub" data-i18n="sub">Add, edit, and delete Cofdtld entries. Save as real JSON files, or import from file.</p>
+      <a class="back" href="./" data-i18n="back">← Back to the lexicon</a>
+    </div>
+    <div class="lang-switch">
+      <button data-lang="en">EN</button>
+      <button data-lang="zh">中文</button>
+    </div>
+  </div>
 
   <!-- 文件工具栏 -->
   <div class="filebar">
-    <button class="primary" id="btnOpen">📂 打开文件</button>
-    <button class="ghost" id="btnSave">💾 保存文件</button>
-    <button class="ghost" id="btnSaveAs">保存为…</button>
-    <button class="ghost" id="btnExport">⬇ 导出 JSON</button>
-    <span class="status" id="fsStatus"><span class="dot" id="fsDot"></span><span id="fsText">检测中…</span></span>
+    <button class="primary" id="btnOpen" data-i18n="openFile">📂 Open file</button>
+    <button class="ghost" id="btnSave" data-i18n="saveFile">💾 Save file</button>
+    <button class="ghost" id="btnSaveAs" data-i18n="saveAs">Save as…</button>
+    <button class="ghost" id="btnExport" data-i18n="exportJson">⬇ Export JSON</button>
+    <span class="status"><span class="dot" id="fsDot"></span><span id="fsText">Checking…</span></span>
   </div>
 
   <!-- 主布局 -->
@@ -210,89 +226,69 @@
 
     <!-- 左侧表单 -->
     <aside class="panel">
-      <h2 id="formTitle">添加词条</h2>
+      <h2 id="formTitle">Add entry</h2>
       <form id="entryForm" autocomplete="off">
         <div class="field">
-          <label>Cofdtld 词形 <span class="req">*</span></label>
+          <label><span data-i18n="fieldCof">Cofdtld word form</span> <span class="req">*</span></label>
           <input id="f_cof" placeholder="e.g. cofdtld" required>
         </div>
         <div class="field">
-          <label>英文释义 <span class="req">*</span><span class="inline-hint">多个用逗号分隔</span></label>
+          <label><span data-i18n="fieldEn">English gloss</span> <span class="req">*</span><span class="inline-hint" data-i18n="fieldMultiple">comma separated</span></label>
           <input id="f_en" placeholder="hello, hi" required>
         </div>
         <div class="field">
-          <label>中文释义 <span class="req">*</span><span class="inline-hint">多个用逗号分隔</span></label>
+          <label><span data-i18n="fieldZh">Chinese gloss</span> <span class="req">*</span><span class="inline-hint" data-i18n="fieldMultiple2">comma separated</span></label>
           <input id="f_zh" placeholder="你好" required>
         </div>
         <div class="field-row">
           <div class="field">
-            <label>词性</label>
-            <select id="f_pos">
-              <option value="interj">感叹词</option>
-              <option value="pron">代词</option>
-              <option value="n">名词</option>
-              <option value="v">动词</option>
-              <option value="adj">形容词</option>
-              <option value="num">数词</option>
-              <option value="adv">副词</option>
-              <option value="prep">介词</option>
-              <option value="conj">连词</option>
-              <option value="copula">系词</option>
-              <option value="particle">助词</option>
-              <option value="n/v">名词/动词</option>
-            </select>
+            <label data-i18n="fieldPos">Part of speech</label>
+            <select id="f_pos"></select>
           </div>
           <div class="field">
-            <label>分类</label>
-            <select id="f_cat">
-              <option value="greeting">问候</option>
-              <option value="pronoun">代词</option>
-              <option value="nature">自然</option>
-              <option value="people">人与物</option>
-              <option value="abstract">抽象</option>
-              <option value="action">动作</option>
-              <option value="adj">形容</option>
-              <option value="num">数词</option>
-              <option value="func">功能词（翻译器）</option>
-            </select>
+            <label data-i18n="fieldCat">Category</label>
+            <select id="f_cat"></select>
           </div>
         </div>
         <div class="field">
-          <label class="checkbox-label"><input type="checkbox" id="f_core" checked> 核心词条（计入主词库）</label>
+          <label class="checkbox-label"><input type="checkbox" id="f_core" checked> <span data-i18n="fieldCore">Core entry (counts toward main lexicon)</span></label>
         </div>
 
         <details>
-          <summary>例句（可选）</summary>
+          <summary data-i18n="detailsExamples">Example sentences (optional)</summary>
           <div class="inner">
             <div class="field">
-              <label>Cofdtld 例句</label>
+              <label data-i18n="fieldExCof">Cofdtld example</label>
               <input id="f_ex_cof" placeholder="Cofdtld, drenth!">
             </div>
             <div class="field">
-              <label>中文翻译</label>
+              <label data-i18n="fieldExZh">Chinese translation</label>
               <input id="f_ex_zh" placeholder="你好，朋友！">
             </div>
             <div class="field">
-              <label>English translation</label>
+              <label data-i18n="fieldExEn">English translation</label>
               <input id="f_ex_en" placeholder="Hello, friend!">
             </div>
           </div>
         </details>
 
         <div class="form-actions">
-          <button type="submit" class="primary" id="submitBtn">添加词条</button>
-          <button type="button" class="ghost" id="cancelEditBtn" style="display:none">取消编辑</button>
+          <button type="submit" class="primary" id="submitBtn">Add entry</button>
+          <button type="button" class="ghost" id="cancelEditBtn" style="display:none" data-i18n="btnCancelEdit">Cancel edit</button>
         </div>
       </form>
     </aside>
 
     <!-- 右侧列表 -->
     <section class="panel">
-      <h2>词条列表 <span style="float:right;color:#5d6b81;font-size:.7rem;letter-spacing:0">点击编辑 / 删除</span></h2>
+      <h2>
+        <span data-i18n="listTitle">Entries</span>
+        <span style="float:right;color:#5d6b81;font-size:.7rem;letter-spacing:0;text-transform:none" data-i18n="listHint">click to edit / delete</span>
+      </h2>
       <div class="list-head">
-        <input class="search" id="search" placeholder="搜索 Cofdtld / English / 中文…">
-        <button class="ghost small" id="btnSeed" title="加载内置的 98 个词">示例</button>
-        <button class="ghost small" id="btnClearAll" title="清空全部词条">清空</button>
+        <input class="search" id="search" placeholder="Search Cofdtld / English / Chinese…">
+        <button class="ghost small" id="btnSeed" data-i18n="btnSeed" data-i18n-title="titleSeed">Sample</button>
+        <button class="ghost small" id="btnClearAll" data-i18n="btnClearAll" data-i18n-title="titleClear">Clear</button>
       </div>
       <div class="stats" id="stats"></div>
       <div class="list" id="list"></div>
@@ -301,18 +297,18 @@
 
   <!-- 导出区 -->
   <div class="export">
-    <h2>导出为代码片段</h2>
+    <h2 data-i18n="exportTitle">Export as code snippet</h2>
     <div class="btns">
-      <button class="ghost small" id="btnGenTranslator">生成 Translator 格式</button>
-      <button class="ghost small" id="btnGenLexicon">生成 Lexicon 格式</button>
-      <button class="primary small" id="btnCopy">复制到剪贴板</button>
+      <button class="ghost small" id="btnGenTranslator" data-i18n="btnGenTranslator">Generate Translator format</button>
+      <button class="ghost small" id="btnGenLexicon" data-i18n="btnGenLexicon">Generate Lexicon format</button>
+      <button class="primary small" id="btnCopy" data-i18n="btnCopy">Copy to clipboard</button>
     </div>
-    <textarea id="exportArea" placeholder="点击上方按钮生成代码片段，然后粘贴到你的 lexicon.html 或 translator.html 里。"></textarea>
+    <textarea id="exportArea" placeholder="Click a button above to generate a snippet, then paste it into your lexicon.html or translator.html."></textarea>
   </div>
 
   <footer>
-    数据自动保存在浏览器本地（localStorage）· 建议定期用「保存文件」导出 JSON 备份<br>
-    支持 File System Access API 的浏览器（Chrome / Edge）可以直接读写本地文件
+    <span data-i18n="footer1">Data auto-saved in browser localStorage · use "Save file" to export JSON backup regularly</span><br>
+    <span data-i18n="footer2">Browsers supporting File System Access API (Chrome / Edge) can read and write local files directly</span>
   </footer>
 </div>
 
@@ -320,8 +316,217 @@
 
 <script>
 /* ============================================================
-   种子数据（98 个词，紧凑格式）
-   字段：cof|en|zh|pos|cat|core|例句(cof::zh::en)
+   i18n
+   ============================================================ */
+const I18N = {
+  en: {
+    pageTitle: "Cofdtld Lexicon Builder",
+    h1: "Lexicon Builder",
+    sub: "Add, edit, and delete Cofdtld entries. Save as real JSON files, or import from file.",
+    back: "← Back to the lexicon",
+    openFile: "📂 Open file",
+    saveFile: "💾 Save file",
+    saveAs: "Save as…",
+    exportJson: "⬇ Export JSON",
+    fsSupported: "Local file read/write supported",
+    fsSupportedTitle: "Chrome / Edge: read and write local JSON directly",
+    fsDownload: "Download / upload mode",
+    fsDownloadTitle: "This browser doesn't support File System Access API; uses download & upload",
+
+    formAdd: "Add entry",
+    formEdit: "Edit entry",
+    fieldCof: "Cofdtld word form",
+    fieldEn: "English gloss",
+    fieldZh: "Chinese gloss",
+    fieldMultiple: "comma separated",
+    fieldMultiple2: "comma separated",
+    fieldPos: "Part of speech",
+    fieldCat: "Category",
+    fieldCore: "Core entry (counts toward main lexicon)",
+    detailsExamples: "Example sentences (optional)",
+    fieldExCof: "Cofdtld example",
+    fieldExZh: "Chinese translation",
+    fieldExEn: "English translation",
+    btnAdd: "Add entry",
+    btnUpdate: "Update entry",
+    btnCancelEdit: "Cancel edit",
+
+    listTitle: "Entries",
+    listHint: "click to edit / delete",
+    searchPh: "Search Cofdtld / English / Chinese…",
+    btnSeed: "Sample",
+    btnClearAll: "Clear",
+    titleSeed: "Load the built-in sample entries",
+    titleClear: "Clear all entries",
+    statTotal: "Total",
+    statCore: "Core",
+    statFunc: "Function",
+    statFiltered: "Filtered",
+    noMatch: "No matching entries",
+    noEntries: "No entries yet. Add one using the form on the left.",
+    btnEdit: "Edit",
+    btnDelete: "Delete",
+    tagFunc: "func",
+    tagEx: "ex",
+
+    exportTitle: "Export as code snippet",
+    btnGenTranslator: "Generate Translator format",
+    btnGenLexicon: "Generate Lexicon format",
+    btnCopy: "Copy to clipboard",
+    exportPh: "Click a button above to generate a snippet, then paste it into your lexicon.html or translator.html.",
+
+    footer1: 'Data auto-saved in browser localStorage · use "Save file" to export JSON backup regularly',
+    footer2: "Browsers supporting File System Access API (Chrome / Edge) can read and write local files directly",
+
+    pos_interj: "interj.", pos_pron: "pron.", pos_n: "n.", pos_v: "v.", pos_adj: "adj.",
+    pos_num: "num.", pos_adv: "adv.", pos_prep: "prep.", pos_conj: "conj.",
+    pos_copula: "copula", pos_particle: "particle", pos_n_v: "n./v.",
+    cat_greeting: "Greeting", cat_pronoun: "Pronoun", cat_nature: "Nature",
+    cat_people: "People & Things", cat_abstract: "Abstract", cat_action: "Action",
+    cat_adj: "Adjective", cat_num: "Number", cat_func: "Function (translator)",
+
+    toastCofRequired: "Word form cannot be empty",
+    toastEnRequired: "At least one English gloss",
+    toastZhRequired: "At least one Chinese gloss",
+    toastDuplicate: 'Word form "{cof}" already exists (entry {n})',
+    toastUpdated: "Updated",
+    toastAdded: "Added",
+    toastDeleted: "Deleted",
+    toastSaved: "Saved to file",
+    toastDownloaded: "JSON file downloaded",
+    toastNoEntriesInFile: "No recognizable entries in file",
+    toastImported: "Imported ({n} entries)",
+    toastJsonError: "JSON parse failed: {msg}",
+    toastSampleLoaded: "Sample lexicon loaded",
+    toastCleared: "Cleared",
+    toastGeneratedTranslator: "Translator format generated",
+    toastGeneratedLexicon: "Lexicon format generated (core only)",
+    toastGenerateFirst: "Generate a snippet first",
+    toastCopied: "Copied to clipboard",
+    confirmOverwriteSample: "Overwrite current data with built-in sample?",
+    confirmClearAll: "Clear all {n} entries?",
+    confirmDelete: 'Delete "{cof}"?',
+    confirmImport: "Importing {n} entries.\n\nOK = replace current {m} entries\nCancel = merge (skip duplicates)"
+  },
+  zh: {
+    pageTitle: "Cofdtld 词库编辑器",
+    h1: "Lexicon Builder",
+    sub: "添加、编辑、删除 Cofdtld 词条，保存为真实 JSON 文件，或从文件导入。",
+    back: "← 返回词库",
+    openFile: "📂 打开文件",
+    saveFile: "💾 保存文件",
+    saveAs: "保存为…",
+    exportJson: "⬇ 导出 JSON",
+    fsSupported: "支持本地文件读写",
+    fsSupportedTitle: "Chrome / Edge：可直接打开和保存本地 JSON 文件",
+    fsDownload: "下载 / 上传模式",
+    fsDownloadTitle: "当前浏览器不支持 File System Access API，使用下载与上传文件的方式",
+
+    formAdd: "添加词条",
+    formEdit: "编辑词条",
+    fieldCof: "Cofdtld 词形",
+    fieldEn: "英文释义",
+    fieldZh: "中文释义",
+    fieldMultiple: "多个用逗号分隔",
+    fieldMultiple2: "多个用逗号分隔",
+    fieldPos: "词性",
+    fieldCat: "分类",
+    fieldCore: "核心词条（计入主词库）",
+    detailsExamples: "例句（可选）",
+    fieldExCof: "Cofdtld 例句",
+    fieldExZh: "中文翻译",
+    fieldExEn: "English translation",
+    btnAdd: "添加词条",
+    btnUpdate: "更新词条",
+    btnCancelEdit: "取消编辑",
+
+    listTitle: "词条列表",
+    listHint: "点击编辑 / 删除",
+    searchPh: "搜索 Cofdtld / English / 中文…",
+    btnSeed: "示例",
+    btnClearAll: "清空",
+    titleSeed: "加载内置示例词条",
+    titleClear: "清空全部词条",
+    statTotal: "共",
+    statCore: "核心",
+    statFunc: "功能",
+    statFiltered: "筛选",
+    noMatch: "没有匹配的词条",
+    noEntries: "还没有词条，用左侧表单添加吧",
+    btnEdit: "编辑",
+    btnDelete: "删除",
+    tagFunc: "扩",
+    tagEx: "例",
+
+    exportTitle: "导出为代码片段",
+    btnGenTranslator: "生成 Translator 格式",
+    btnGenLexicon: "生成 Lexicon 格式",
+    btnCopy: "复制到剪贴板",
+    exportPh: "点击上方按钮生成代码片段，然后粘贴到你的 lexicon.html 或 translator.html 里。",
+
+    footer1: '数据自动保存在浏览器本地（localStorage）· 建议定期用「保存文件」导出 JSON 备份',
+    footer2: "支持 File System Access API 的浏览器（Chrome / Edge）可以直接读写本地文件",
+
+    pos_interj: "感叹词", pos_pron: "代词", pos_n: "名词", pos_v: "动词", pos_adj: "形容词",
+    pos_num: "数词", pos_adv: "副词", pos_prep: "介词", pos_conj: "连词",
+    pos_copula: "系词", pos_particle: "助词", pos_n_v: "名词/动词",
+    cat_greeting: "问候", cat_pronoun: "代词", cat_nature: "自然",
+    cat_people: "人与物", cat_abstract: "抽象", cat_action: "动作",
+    cat_adj: "形容", cat_num: "数词", cat_func: "功能词（翻译器）",
+
+    toastCofRequired: "词形不能为空",
+    toastEnRequired: "至少一个英文释义",
+    toastZhRequired: "至少一个中文释义",
+    toastDuplicate: '词形 "{cof}" 已存在（第 {n} 条）',
+    toastUpdated: "已更新",
+    toastAdded: "已添加",
+    toastDeleted: "已删除",
+    toastSaved: "已保存到文件",
+    toastDownloaded: "已下载 JSON 文件",
+    toastNoEntriesInFile: "文件中没有可识别的词条",
+    toastImported: "导入成功（{n} 条）",
+    toastJsonError: "JSON 解析失败：{msg}",
+    toastSampleLoaded: "已加载示例词库",
+    toastCleared: "已清空",
+    toastGeneratedTranslator: "已生成 Translator 格式",
+    toastGeneratedLexicon: "已生成 Lexicon 格式（仅核心词）",
+    toastGenerateFirst: "先生成代码片段",
+    toastCopied: "已复制到剪贴板",
+    confirmOverwriteSample: "用内置示例覆盖当前数据？",
+    confirmClearAll: "确定清空全部 {n} 条词条？",
+    confirmDelete: '删除 "{cof}" ？',
+    confirmImport: "导入 {n} 个词条。\n\n确定 = 替换当前 {m} 条\n取消 = 合并（跳过重复词形）"
+  }
+};
+
+/* 词性 / 分类代码值（与数据一致，不随语言改变） */
+const POS_KEYS = ['interj','pron','n','v','adj','num','adv','prep','conj','copula','particle','n/v'];
+const CAT_KEYS = ['greeting','pronoun','nature','people','abstract','action','adj','num','func'];
+const posKey = p => 'pos_' + p.replace('/', '_');
+const catKey = c => 'cat_' + c;
+
+/* Lexicon 导出时用的固定中文映射（因为 lexicon.html 是中文结构） */
+const POS_ZH_STATIC = {interj:'感叹词',pron:'代词',n:'名词',v:'动词',adj:'形容词',
+  num:'数词',adv:'副词',prep:'介词',conj:'连词',copula:'系词',particle:'助词','n/v':'名词/动词'};
+const CAT_ZH_STATIC = {greeting:'问候',pronoun:'代词',nature:'自然',people:'人与物',
+  abstract:'抽象',action:'动作',adj:'形容',num:'数词',func:'抽象'};
+
+/* 语言状态 */
+let lang = localStorage.getItem('cofdtld_lang') || 'en';
+
+function t(key, params){
+  let s = (I18N[lang] && I18N[lang][key] != null) ? I18N[lang][key]
+        : (I18N.en[key] != null ? I18N.en[key] : key);
+  if (params){
+    for (const k in params){
+      s = s.replaceAll('{' + k + '}', params[k]);
+    }
+  }
+  return s;
+}
+
+/* ============================================================
+   种子数据（98 个词）
    ============================================================ */
 const SEED_RAW = [
 "cofdtld|hello,hi|你好|interj|greeting|1|Cofdtld, drenth!::你好，朋友！::Hello, friend!",
@@ -397,7 +602,7 @@ const SEED_RAW = [
 "drovn|one|一|num|num|1||",
 "tsek|two|二|num|num|1||",
 "plorn|three|三|num|num|1||",
-"kvar|four|四|num|num|1||",
+"kvar|四|四|num|num|1||",
 "feln|five|五|num|num|1||",
 "et|and|和|conj|func|0||",
 "ov|of|的|prep|func|0||",
@@ -423,6 +628,8 @@ const SEED_RAW = [
 "non|nine|九|num|func|0||",
 "dekn|ten|十|num|func|0||"
 ];
+// 修正 kvar 的英文（上面列表里误写成了中文"四"）
+SEED_RAW[SEED_RAW.indexOf("kvar|四|四|num|num|1||")] = "kvar|four|四|num|num|1||";
 
 function parseSeed(raw){
   return raw.map(line=>{
@@ -440,30 +647,14 @@ function parseSeed(raw){
 }
 
 /* ============================================================
-   映射表
-   ============================================================ */
-const POS_ZH = {interj:'感叹词',pron:'代词',n:'名词',v:'动词',adj:'形容词',
-  num:'数词',adv:'副词',prep:'介词',conj:'连词',copula:'系词',
-  particle:'助词','n/v':'名词/动词'};
-const CAT_ZH = {greeting:'问候',pronoun:'代词',nature:'自然',people:'人与物',
-  abstract:'抽象',action:'动作',adj:'形容',num:'数词',func:'抽象'};
-
-const POS_EN = Object.fromEntries(Object.entries(POS_ZH).map(([k,v])=>[v,k]));
-const CAT_EN = Object.fromEntries(Object.entries(CAT_ZH).map(([k,v])=>[v,k]));
-
-/* ============================================================
-   状态
+   状态 & DOM
    ============================================================ */
 const LS_KEY = 'cofdtld_lexicon_draft_v1';
 let entries = [];
 let editingIndex = -1;
 let fileHandle = null;
-
 const hasFS = 'showSaveFilePicker' in window && 'showOpenFilePicker' in window;
 
-/* ============================================================
-   DOM 引用
-   ============================================================ */
 const $ = id => document.getElementById(id);
 const form = $('entryForm');
 const f_cof = $('f_cof'), f_en = $('f_en'), f_zh = $('f_zh');
@@ -475,7 +666,7 @@ const exportArea = $('exportArea');
 const toastEl = $('toast');
 
 /* ============================================================
-   工具函数
+   工具
    ============================================================ */
 function toast(msg, isError){
   toastEl.textContent = msg;
@@ -502,12 +693,15 @@ function normalizeEntry(e){
     };
   }
   if (e.w){
+    // 兼容旧 lexicon.html 格式
+    const posRev = {}; Object.entries(POS_ZH_STATIC).forEach(([k,v])=>posRev[v]=k);
+    const catRev = {}; Object.entries(CAT_ZH_STATIC).forEach(([k,v])=>catRev[v]=k);
     return {
       cof: String(e.w),
       en: e.en ? splitList(String(e.en)) : [],
       zh: e.zh ? splitList(String(e.zh)) : [],
-      pos: POS_EN[e.pos] || 'n',
-      cat: CAT_EN[e.cat] || 'abstract',
+      pos: posRev[e.pos] || 'n',
+      cat: catRev[e.cat] || 'abstract',
       core: true,
       ex: Array.isArray(e.ex) && e.ex.length === 3 ? e.ex.map(String) : null
     };
@@ -533,6 +727,10 @@ function restore(){
   return false;
 }
 
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
 /* ============================================================
    渲染
    ============================================================ */
@@ -547,12 +745,13 @@ function render(){
 
   const coreN = entries.filter(e=>e.core).length;
   const funcN = entries.length - coreN;
-  statsEl.innerHTML = `共 <b>${entries.length}</b> 条 · 核心 <b>${coreN}</b> · 功能 <b>${funcN}</b>`
-    + (q ? ` · 筛选 <b>${filtered.length}</b>` : '');
+  let statsHtml = `${t('statTotal')} <b>${entries.length}</b> · ${t('statCore')} <b>${coreN}</b> · ${t('statFunc')} <b>${funcN}</b>`;
+  if (q) statsHtml += ` · ${t('statFiltered')} <b>${filtered.length}</b>`;
+  statsEl.innerHTML = statsHtml;
 
   if (!filtered.length){
     listEl.innerHTML = `<div style="padding:36px;text-align:center;color:var(--muted);font-size:.85rem">
-      ${entries.length ? '没有匹配的词条' : '还没有词条，用左侧表单添加吧'}
+      ${entries.length ? t('noMatch') : t('noEntries')}
     </div>`;
     return;
   }
@@ -560,8 +759,8 @@ function render(){
   listEl.innerHTML = filtered.map(e=>{
     const idx = entries.indexOf(e);
     const tags = [];
-    if (!e.core) tags.push('<span class="tag func">func</span>');
-    if (e.ex) tags.push('<span class="tag ex">ex</span>');
+    if (!e.core) tags.push(`<span class="tag func">${t('tagFunc')}</span>`);
+    if (e.ex) tags.push(`<span class="tag ex">${t('tagEx')}</span>`);
     return `
       <div class="item${idx === editingIndex ? ' editing' : ''}" data-idx="${idx}">
         <span class="cof">${escapeHtml(e.cof)}</span>
@@ -571,33 +770,29 @@ function render(){
         </span>
         ${tags.join('')}
         <span class="acts">
-          <button class="edit" data-idx="${idx}">编辑</button>
-          <button class="del" data-idx="${idx}">删除</button>
+          <button class="edit" data-idx="${idx}">${t('btnEdit')}</button>
+          <button class="del" data-idx="${idx}">${t('btnDelete')}</button>
         </span>
       </div>`;
   }).join('');
 }
 
-function escapeHtml(s){
-  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-
 /* ============================================================
-   表单操作
+   表单
    ============================================================ */
 function fillForm(e, idx){
   f_cof.value = e.cof;
   f_en.value = e.en.join(', ');
   f_zh.value = e.zh.join(', ');
-  f_pos.value = POS_ZH[e.pos] ? e.pos : 'n';
-  f_cat.value = e.cat || 'abstract';
+  f_pos.value = POS_KEYS.includes(e.pos) ? e.pos : 'n';
+  f_cat.value = CAT_KEYS.includes(e.cat) ? e.cat : 'abstract';
   f_core.checked = e.core;
   f_ex_cof.value = e.ex ? e.ex[0] : '';
   f_ex_zh.value  = e.ex ? e.ex[1] : '';
   f_ex_en.value  = e.ex ? e.ex[2] : '';
   editingIndex = idx;
-  formTitle.textContent = '编辑词条';
-  submitBtn.textContent = '更新词条';
+  formTitle.textContent = t('formEdit');
+  submitBtn.textContent = t('btnUpdate');
   cancelEditBtn.style.display = '';
   render();
   f_cof.focus();
@@ -609,8 +804,8 @@ function resetForm(){
   f_pos.value = 'n';
   f_cat.value = 'abstract';
   editingIndex = -1;
-  formTitle.textContent = '添加词条';
-  submitBtn.textContent = '添加词条';
+  formTitle.textContent = t('formAdd');
+  submitBtn.textContent = t('btnAdd');
   cancelEditBtn.style.display = 'none';
   render();
 }
@@ -621,22 +816,19 @@ form.addEventListener('submit', ev=>{
   const en = splitList(f_en.value);
   const zh = splitList(f_zh.value);
 
-  if (!cof){ toast('词形不能为空', true); return; }
-  if (!en.length){ toast('至少一个英文释义', true); return; }
-  if (!zh.length){ toast('至少一个中文释义', true); return; }
+  if (!cof){ toast(t('toastCofRequired'), true); return; }
+  if (!en.length){ toast(t('toastEnRequired'), true); return; }
+  if (!zh.length){ toast(t('toastZhRequired'), true); return; }
 
-  // 唯一性检查（编辑时排除自己）
   const dup = entries.findIndex((e,i)=> i !== editingIndex && e.cof.toLowerCase() === cof.toLowerCase());
-  if (dup >= 0){ toast(`词形 "${cof}" 已存在（第 ${dup+1} 条）`, true); return; }
+  if (dup >= 0){ toast(t('toastDuplicate', {cof, n: dup+1}), true); return; }
 
   const ex = (f_ex_cof.value.trim() || f_ex_zh.value.trim() || f_ex_en.value.trim())
     ? [f_ex_cof.value.trim(), f_ex_zh.value.trim(), f_ex_en.value.trim()]
     : null;
 
   const entry = {
-    cof,
-    en,
-    zh,
+    cof, en, zh,
     pos: f_pos.value,
     cat: f_cat.value,
     core: f_core.checked,
@@ -645,10 +837,10 @@ form.addEventListener('submit', ev=>{
 
   if (editingIndex >= 0){
     entries[editingIndex] = entry;
-    toast('已更新');
+    toast(t('toastUpdated'));
   } else {
     entries.push(entry);
-    toast('已添加');
+    toast(t('toastAdded'));
   }
 
   persist();
@@ -669,13 +861,13 @@ listEl.addEventListener('click', ev=>{
   if (btn.classList.contains('edit')){
     fillForm(entries[idx], idx);
   } else if (btn.classList.contains('del')){
-    if (confirm(`删除 "${entries[idx].cof}" ？`)){
+    if (confirm(t('confirmDelete', {cof: entries[idx].cof}))){
       entries.splice(idx, 1);
       if (editingIndex === idx) resetForm();
       else if (editingIndex > idx) editingIndex--;
       persist();
       render();
-      toast('已删除');
+      toast(t('toastDeleted'));
     }
   }
 });
@@ -683,13 +875,12 @@ listEl.addEventListener('click', ev=>{
 searchEl.addEventListener('input', render);
 
 /* ============================================================
-   文件系统：保存 / 打开
+   文件系统
    ============================================================ */
 async function saveFile(forceDialog){
   const data = JSON.stringify(entries, null, 2);
   const name = 'cofdtld-lexicon.json';
 
-  // 优先 File System Access API
   if (hasFS && !forceDialog && fileHandle){
     try{
       const perm = await fileHandle.requestPermission({mode:'readwrite'});
@@ -697,10 +888,10 @@ async function saveFile(forceDialog){
         const w = await fileHandle.createWritable();
         await w.write(data);
         await w.close();
-        toast('已保存到文件');
+        toast(t('toastSaved'));
         return;
       }
-    }catch(e){ /* 继续走对话框 */ }
+    }catch(e){}
   }
 
   if (hasFS){
@@ -712,7 +903,7 @@ async function saveFile(forceDialog){
       const w = await fileHandle.createWritable();
       await w.write(data);
       await w.close();
-      toast('已保存到文件');
+      toast(t('toastSaved'));
       return;
     }catch(e){
       if (e.name === 'AbortError') return;
@@ -720,14 +911,13 @@ async function saveFile(forceDialog){
     }
   }
 
-  // 回退：下载
   const blob = new Blob([data], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url; a.download = name;
   document.body.appendChild(a); a.click(); a.remove();
   URL.revokeObjectURL(url);
-  toast('已下载 JSON 文件');
+  toast(t('toastDownloaded'));
 }
 
 async function openFile(){
@@ -767,12 +957,10 @@ async function openFile(){
     const list = Array.isArray(raw) ? raw : (raw.entries || raw.lexicon || []);
     const normalized = list.map(normalizeEntry).filter(Boolean);
     if (!normalized.length){
-      toast('文件中没有可识别的词条', true);
+      toast(t('toastNoEntriesInFile'), true);
       return;
     }
-    const replace = confirm(
-      `导入 ${normalized.length} 个词条。\n\n确定 = 替换当前 ${entries.length} 条\n取消 = 合并（跳过重复词形）`
-    );
+    const replace = confirm(t('confirmImport', {n: normalized.length, m: entries.length}));
     if (replace){
       entries = normalized;
     } else {
@@ -783,14 +971,14 @@ async function openFile(){
     }
     persist();
     resetForm();
-    toast(`导入成功（${entries.length} 条）`);
+    toast(t('toastImported', {n: entries.length}));
   }catch(err){
-    toast('JSON 解析失败：' + err.message, true);
+    toast(t('toastJsonError', {msg: err.message}), true);
   }
 }
 
 /* ============================================================
-   按钮绑定
+   按钮
    ============================================================ */
 $('btnOpen').addEventListener('click', openFile);
 $('btnSave').addEventListener('click', ()=>saveFile(false));
@@ -804,24 +992,24 @@ $('btnExport').addEventListener('click', ()=>{
   a.href = url; a.download = 'cofdtld-lexicon.json';
   document.body.appendChild(a); a.click(); a.remove();
   URL.revokeObjectURL(url);
-  toast('已下载 JSON');
+  toast(t('toastDownloaded'));
 });
 
 $('btnSeed').addEventListener('click', ()=>{
-  if (entries.length && !confirm('用内置示例覆盖当前数据？')) return;
+  if (entries.length && !confirm(t('confirmOverwriteSample'))) return;
   entries = parseSeed(SEED_RAW);
-  persist(); resetForm(); toast('已加载示例词库');
+  persist(); resetForm(); toast(t('toastSampleLoaded'));
 });
 
 $('btnClearAll').addEventListener('click', ()=>{
   if (!entries.length) return;
-  if (!confirm(`确定清空全部 ${entries.length} 条词条？`)) return;
+  if (!confirm(t('confirmClearAll', {n: entries.length}))) return;
   entries = [];
-  persist(); resetForm(); toast('已清空');
+  persist(); resetForm(); toast(t('toastCleared'));
 });
 
 /* ============================================================
-   代码片段生成
+   代码片段
    ============================================================ */
 function genTranslator(){
   return entries.map(e=>{
@@ -832,10 +1020,13 @@ function genTranslator(){
 }
 
 function genLexicon(){
+  // 固定中文，兼容 lexicon.html
   return entries.filter(e=>e.core).map(e=>{
     const zh = e.zh.join('；');
     const en = e.en.join('; ');
-    let line = `  { w:${JSON.stringify(e.cof)}, pos:${JSON.stringify(POS_ZH[e.pos]||'名词')}, cat:${JSON.stringify(CAT_ZH[e.cat]||'抽象')}, zh:${JSON.stringify(zh)}, en:${JSON.stringify(en)}`;
+    const pos = POS_ZH_STATIC[e.pos] || '名词';
+    const cat = CAT_ZH_STATIC[e.cat] || '抽象';
+    let line = `  { w:${JSON.stringify(e.cof)}, pos:${JSON.stringify(pos)}, cat:${JSON.stringify(cat)}, zh:${JSON.stringify(zh)}, en:${JSON.stringify(en)}`;
     if (e.ex) line += `,\n    ex:[${e.ex.map(s=>JSON.stringify(s)).join(',')}]`;
     line += ' },';
     return line;
@@ -844,45 +1035,102 @@ function genLexicon(){
 
 $('btnGenTranslator').addEventListener('click', ()=>{
   exportArea.value = genTranslator();
-  toast('已生成 Translator 格式');
+  toast(t('toastGeneratedTranslator'));
 });
 $('btnGenLexicon').addEventListener('click', ()=>{
   exportArea.value = genLexicon();
-  toast('已生成 Lexicon 格式（仅核心词）');
+  toast(t('toastGeneratedLexicon'));
 });
 $('btnCopy').addEventListener('click', async ()=>{
-  if (!exportArea.value){ toast('先生成代码片段', true); return; }
+  if (!exportArea.value){ toast(t('toastGenerateFirst'), true); return; }
   try{
     await navigator.clipboard.writeText(exportArea.value);
-    toast('已复制到剪贴板');
+    toast(t('toastCopied'));
   }catch(e){
     exportArea.select();
     document.execCommand('copy');
-    toast('已复制');
+    toast(t('toastCopied'));
   }
+});
+
+/* ============================================================
+   语言切换 & 应用
+   ============================================================ */
+function rebuildSelects(){
+  const curPos = f_pos.value;
+  const curCat = f_cat.value;
+  f_pos.innerHTML = POS_KEYS.map(k=>`<option value="${escapeHtml(k)}">${escapeHtml(t(posKey(k)))}</option>`).join('');
+  f_cat.innerHTML = CAT_KEYS.map(k=>`<option value="${escapeHtml(k)}">${escapeHtml(t(catKey(k)))}</option>`).join('');
+  f_pos.value = POS_KEYS.includes(curPos) ? curPos : 'n';
+  f_cat.value = CAT_KEYS.includes(curCat) ? curCat : 'abstract';
+}
+
+function updateFsStatus(){
+  const dot = $('fsDot'), txt = $('fsText');
+  if (hasFS){
+    dot.className = 'dot fs';
+    txt.textContent = t('fsSupported');
+    txt.title = t('fsSupportedTitle');
+  } else {
+    dot.className = 'dot ok';
+    txt.textContent = t('fsDownload');
+    txt.title = t('fsDownloadTitle');
+  }
+}
+
+function applyI18n(){
+  document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+  document.title = t('pageTitle');
+
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach(el=>{
+    el.title = t(el.dataset.i18nTitle);
+  });
+
+  // 搜索框 placeholder
+  searchEl.placeholder = t('searchPh');
+  exportArea.placeholder = t('exportPh');
+
+  // 动态文本
+  formTitle.textContent = editingIndex >= 0 ? t('formEdit') : t('formAdd');
+  submitBtn.textContent = editingIndex >= 0 ? t('btnUpdate') : t('btnAdd');
+
+  // select 选项
+  rebuildSelects();
+
+  // 文件系统状态
+  updateFsStatus();
+
+  // 语言按钮高亮
+  document.querySelectorAll('.lang-switch button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+
+  // 重渲染列表
+  render();
+}
+
+document.querySelectorAll('.lang-switch button').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    if (lang === b.dataset.lang) return;
+    lang = b.dataset.lang;
+    localStorage.setItem('cofdtld_lang', lang);
+    applyI18n();
+  });
 });
 
 /* ============================================================
    初始化
    ============================================================ */
 (function init(){
-  // 文件系统支持状态
-  const dot = $('fsDot'), txt = $('fsText');
-  if (hasFS){
-    dot.classList.add('fs');
-    txt.textContent = '支持本地文件读写';
-    txt.title = 'Chrome / Edge：可直接打开和保存本地 JSON 文件';
-  } else {
-    dot.classList.add('ok');
-    txt.textContent = '下载 / 上传模式';
-    txt.title = '当前浏览器不支持 File System Access API，使用下载与上传文件的方式';
-  }
-
-  // 恢复草稿或加载示例
   if (!restore()){
     entries = parseSeed(SEED_RAW);
   }
-  render();
+  // 先构建 select，再 applyI18n
+  rebuildSelects();
+  applyI18n();
 })();
 </script>
 </body>
