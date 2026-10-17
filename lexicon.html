@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cofdtld 词库编辑器 · Lexicon Builder</title>
+<style>
+  :root{
+    --bg:#0a0d16; --line:rgba(255,255,255,.09);
+    --accent:#7ee0c8; --accent2:#8ab4ff; --text:#e6ecf5; --muted:#8b9bb4;
+    --warn:#f0c674; --danger:#ff7b7b;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; padding:28px 20px 80px;
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+    color:var(--text);
+    background:
+      radial-gradient(1100px 560px at 15% -12%, #1b2a4a 0%, transparent 62%),
+      radial-gradient(900px 520px at 92% -6%, #2a1b3d 0%, transparent 58%),
+      var(--bg);
+    background-attachment:fixed; min-height:100%; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{ max-width:1180px; margin:0 auto; }
+  h1{
+    font-size:clamp(1.6rem,3.5vw,2.2rem); margin:0 0 6px; letter-spacing:.02em;
+    background:linear-gradient(92deg,#7ee0c8,#8ab4ff 60%,#c39bff);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .sub{ margin:0; color:var(--muted); font-size:.86rem; line-height:1.6; }
+  .back{ display:inline-block; margin-top:8px; color:var(--accent2); font-size:.8rem; text-decoration:none; }
+  .back:hover{ text-decoration:underline; }
+
+  /* ---------- 文件工具栏 ---------- */
+  .filebar{
+    margin-top:20px; display:flex; flex-wrap:wrap; gap:9px; align-items:center;
+    padding:14px 16px; background:rgba(255,255,255,.035);
+    border:1px solid var(--line); border-radius:14px;
+  }
+  .filebar .status{
+    margin-left:auto; font-size:.76rem; color:var(--muted);
+    display:flex; align-items:center; gap:7px;
+  }
+  .dot{ width:7px; height:7px; border-radius:50%; background:var(--muted); }
+  .dot.ok{ background:var(--accent); box-shadow:0 0 8px var(--accent); }
+  .dot.fs{ background:var(--accent2); box-shadow:0 0 8px var(--accent2); }
+
+  button{
+    font-family:inherit; font-size:.85rem; cursor:pointer; border-radius:9px;
+    padding:9px 16px; border:1px solid transparent; transition:.16s;
+  }
+  .primary{ background:var(--accent); color:#0a0d16; font-weight:700; }
+  .primary:hover{ background:var(--accent2); }
+  .ghost{ background:rgba(255,255,255,.05); border-color:var(--line); color:var(--muted); }
+  .ghost:hover{ color:var(--text); border-color:rgba(255,255,255,.22); }
+  .danger{ background:rgba(255,123,123,.1); border-color:rgba(255,123,123,.35); color:var(--danger); }
+  .danger:hover{ background:rgba(255,123,123,.18); }
+  .small{ font-size:.78rem; padding:6px 12px; }
+
+  /* ---------- 主布局 ---------- */
+  .layout{
+    margin-top:18px; display:grid;
+    grid-template-columns: 360px 1fr;
+    gap:18px; align-items:start;
+  }
+  @media (max-width:820px){ .layout{ grid-template-columns:1fr; } }
+
+  .panel{
+    background:rgba(255,255,255,.035); border:1px solid var(--line);
+    border-radius:16px; padding:20px;
+  }
+  .panel h2{
+    font-size:.78rem; letter-spacing:.14em; color:var(--muted);
+    text-transform:uppercase; margin:0 0 16px; font-weight:500;
+  }
+
+  /* ---------- 表单 ---------- */
+  .field{ margin-bottom:13px; }
+  .field label{
+    display:block; font-size:.78rem; color:var(--muted);
+    margin-bottom:5px; letter-spacing:.02em;
+  }
+  .field label .req{ color:var(--danger); }
+  .field label .inline-hint{ color:#5d6b81; font-size:.72rem; margin-left:6px; }
+  .field input, .field select{
+    width:100%; background:rgba(0,0,0,.25); border:1px solid var(--line);
+    border-radius:9px; padding:10px 12px; color:var(--text);
+    font-size:.9rem; font-family:inherit; outline:none; transition:.16s;
+  }
+  .field input:focus, .field select:focus{
+    border-color:rgba(126,224,200,.55);
+    box-shadow:0 0 0 3px rgba(126,224,200,.1);
+  }
+  .field-row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .checkbox-label{
+    display:flex; align-items:center; gap:8px;
+    font-size:.85rem; color:var(--text); cursor:pointer;
+    padding:6px 0;
+  }
+  .checkbox-label input{ width:auto; accent-color:var(--accent); }
+
+  details{ margin-bottom:13px; border:1px solid var(--line); border-radius:9px; overflow:hidden; }
+  details summary{
+    padding:10px 13px; font-size:.8rem; color:var(--muted); cursor:pointer;
+    user-select:none; background:rgba(255,255,255,.025);
+  }
+  details summary:hover{ color:var(--text); }
+  details[open] summary{ border-bottom:1px solid var(--line); }
+  details .inner{ padding:13px; }
+
+  .form-actions{ display:flex; gap:9px; margin-top:16px; }
+  .form-actions button{ flex:1; }
+
+  /* ---------- 列表 ---------- */
+  .list-head{ display:flex; gap:9px; margin-bottom:12px; }
+  .search{
+    flex:1; background:rgba(0,0,0,.25); border:1px solid var(--line);
+    border-radius:9px; padding:10px 13px; color:var(--text);
+    font-size:.88rem; font-family:inherit; outline:none;
+  }
+  .search:focus{ border-color:rgba(126,224,200,.5); }
+
+  .stats{
+    display:flex; gap:14px; flex-wrap:wrap;
+    font-size:.76rem; color:var(--muted); margin-bottom:12px;
+  }
+  .stats b{ color:var(--accent); }
+
+  .list{
+    max-height:620px; overflow-y:auto;
+    border:1px solid var(--line); border-radius:12px;
+  }
+  .item{
+    display:flex; align-items:center; gap:10px;
+    padding:11px 14px; border-bottom:1px solid rgba(255,255,255,.04);
+    font-size:.86rem; transition:.14s;
+  }
+  .item:last-child{ border-bottom:none; }
+  .item:hover{ background:rgba(255,255,255,.03); }
+  .item .cof{
+    font-family:ui-monospace,monospace; color:var(--accent);
+    min-width:88px; font-weight:600;
+  }
+  .item .mean{ flex:1; color:var(--text); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .item .mean .en{ color:var(--muted); font-style:italic; }
+  .item .tag{
+    font-size:.66rem; color:var(--accent2); border:1px solid rgba(138,180,255,.3);
+    padding:1px 7px; border-radius:5px; white-space:nowrap; flex:none;
+  }
+  .item .tag.func{ color:var(--warn); border-color:rgba(240,198,116,.3); }
+  .item .tag.ex{ color:var(--accent); border-color:rgba(126,224,200,.3); }
+  .item .acts{ display:flex; gap:5px; flex:none; }
+  .item .acts button{
+    padding:4px 9px; font-size:.72rem; border-radius:6px;
+    background:rgba(255,255,255,.05); border:1px solid var(--line); color:var(--muted);
+  }
+  .item .acts button:hover{ color:var(--text); border-color:rgba(255,255,255,.25); }
+  .item .acts .del:hover{ color:var(--danger); border-color:rgba(255,123,123,.4); }
+  .item.editing{ background:rgba(126,224,200,.07); border-left:2px solid var(--accent); }
+
+  /* ---------- 导出 ---------- */
+  .export{
+    margin-top:22px; padding:20px;
+    background:rgba(255,255,255,.035); border:1px solid var(--line); border-radius:16px;
+  }
+  .export h2{
+    font-size:.78rem; letter-spacing:.14em; color:var(--muted);
+    text-transform:uppercase; margin:0 0 14px; font-weight:500;
+  }
+  .export .btns{ display:flex; flex-wrap:wrap; gap:9px; margin-bottom:14px; }
+  .export textarea{
+    width:100%; min-height:180px; resize:vertical;
+    background:rgba(0,0,0,.3); border:1px solid var(--line); border-radius:10px;
+    padding:13px; color:var(--text); font-size:.78rem; line-height:1.6;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; outline:none;
+  }
+
+  /* ---------- Toast ---------- */
+  .toast{
+    position:fixed; bottom:26px; left:50%; transform:translate(-50%,20px);
+    background:#1c2438; border:1px solid rgba(126,224,200,.4); color:var(--text);
+    padding:12px 22px; border-radius:11px; font-size:.85rem;
+    opacity:0; pointer-events:none; transition:.25s; z-index:99;
+    box-shadow:0 10px 30px rgba(0,0,0,.5);
+  }
+  .toast.show{ opacity:1; transform:translate(-50%,0); }
+  .toast.error{ border-color:rgba(255,123,123,.5); }
+
+  footer{ margin-top:40px; text-align:center; color:#4d5a6e; font-size:.75rem; line-height:1.9; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Lexicon Builder</h1>
+  <p class="sub">添加、编辑、删除 Cofdtld 词条，保存为真实 JSON 文件，或从文件导入。</p>
+  <a class="back" href="./">← 返回词库</a>
+
+  <!-- 文件工具栏 -->
+  <div class="filebar">
+    <button class="primary" id="btnOpen">📂 打开文件</button>
+    <button class="ghost" id="btnSave">💾 保存文件</button>
+    <button class="ghost" id="btnSaveAs">保存为…</button>
+    <button class="ghost" id="btnExport">⬇ 导出 JSON</button>
+    <span class="status" id="fsStatus"><span class="dot" id="fsDot"></span><span id="fsText">检测中…</span></span>
+  </div>
+
+  <!-- 主布局 -->
+  <div class="layout">
+
+    <!-- 左侧表单 -->
+    <aside class="panel">
+      <h2 id="formTitle">添加词条</h2>
+      <form id="entryForm" autocomplete="off">
+        <div class="field">
+          <label>Cofdtld 词形 <span class="req">*</span></label>
+          <input id="f_cof" placeholder="e.g. cofdtld" required>
+        </div>
+        <div class="field">
+          <label>英文释义 <span class="req">*</span><span class="inline-hint">多个用逗号分隔</span></label>
+          <input id="f_en" placeholder="hello, hi" required>
+        </div>
+        <div class="field">
+          <label>中文释义 <span class="req">*</span><span class="inline-hint">多个用逗号分隔</span></label>
+          <input id="f_zh" placeholder="你好" required>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>词性</label>
+            <select id="f_pos">
+              <option value="interj">感叹词</option>
+              <option value="pron">代词</option>
+              <option value="n">名词</option>
+              <option value="v">动词</option>
+              <option value="adj">形容词</option>
+              <option value="num">数词</option>
+              <option value="adv">副词</option>
+              <option value="prep">介词</option>
+              <option value="conj">连词</option>
+              <option value="copula">系词</option>
+              <option value="particle">助词</option>
+              <option value="n/v">名词/动词</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>分类</label>
+            <select id="f_cat">
+              <option value="greeting">问候</option>
+              <option value="pronoun">代词</option>
+              <option value="nature">自然</option>
+              <option value="people">人与物</option>
+              <option value="abstract">抽象</option>
+              <option value="action">动作</option>
+              <option value="adj">形容</option>
+              <option value="num">数词</option>
+              <option value="func">功能词（翻译器）</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label class="checkbox-label"><input type="checkbox" id="f_core" checked> 核心词条（计入主词库）</label>
+        </div>
+
+        <details>
+          <summary>例句（可选）</summary>
+          <div class="inner">
+            <div class="field">
+              <label>Cofdtld 例句</label>
+              <input id="f_ex_cof" placeholder="Cofdtld, drenth!">
+            </div>
+            <div class="field">
+              <label>中文翻译</label>
+              <input id="f_ex_zh" placeholder="你好，朋友！">
+            </div>
+            <div class="field">
+              <label>English translation</label>
+              <input id="f_ex_en" placeholder="Hello, friend!">
+            </div>
+          </div>
+        </details>
+
+        <div class="form-actions">
+          <button type="submit" class="primary" id="submitBtn">添加词条</button>
+          <button type="button" class="ghost" id="cancelEditBtn" style="display:none">取消编辑</button>
+        </div>
+      </form>
+    </aside>
+
+    <!-- 右侧列表 -->
+    <section class="panel">
+      <h2>词条列表 <span style="float:right;color:#5d6b81;font-size:.7rem;letter-spacing:0">点击编辑 / 删除</span></h2>
+      <div class="list-head">
+        <input class="search" id="search" placeholder="搜索 Cofdtld / English / 中文…">
+        <button class="ghost small" id="btnSeed" title="加载内置的 98 个词">示例</button>
+        <button class="ghost small" id="btnClearAll" title="清空全部词条">清空</button>
+      </div>
+      <div class="stats" id="stats"></div>
+      <div class="list" id="list"></div>
+    </section>
+  </div>
+
+  <!-- 导出区 -->
+  <div class="export">
+    <h2>导出为代码片段</h2>
+    <div class="btns">
+      <button class="ghost small" id="btnGenTranslator">生成 Translator 格式</button>
+      <button class="ghost small" id="btnGenLexicon">生成 Lexicon 格式</button>
+      <button class="primary small" id="btnCopy">复制到剪贴板</button>
+    </div>
+    <textarea id="exportArea" placeholder="点击上方按钮生成代码片段，然后粘贴到你的 lexicon.html 或 translator.html 里。"></textarea>
+  </div>
+
+  <footer>
+    数据自动保存在浏览器本地（localStorage）· 建议定期用「保存文件」导出 JSON 备份<br>
+    支持 File System Access API 的浏览器（Chrome / Edge）可以直接读写本地文件
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   种子数据（98 个词，紧凑格式）
+   字段：cof|en|zh|pos|cat|core|例句(cof::zh::en)
+   ============================================================ */
+const SEED_RAW = [
+"cofdtld|hello,hi|你好|interj|greeting|1|Cofdtld, drenth!::你好，朋友！::Hello, friend!",
+"vren|goodbye,bye|再见|interj|greeting|1|Vren, osk vronk!::再见，我们会再来的！::Goodbye, we will come again!",
+"thalm|thanks,thank|谢谢,感谢|interj|greeting|1|Thalm, ta pravt.::谢谢，你真好。::Thank you, you are kind.",
+"skorv|please|请|adv|greeting|1||",
+"nu|yes,is,am,are,be|是,对,确实|copula|greeting|1||",
+"dro|no,not|不,不是,没|particle|greeting|1||",
+"kem|i,me,my|我|pron|pronoun|1||",
+"ta|you,your|你|pron|pronoun|1|Mirk ta?::你叫什么名字？::What is your name?",
+"vor|he,him,his|他|pron|pronoun|1||",
+"lind|she,her,hers|她|pron|pronoun|1||",
+"osk|we,us,our|我们|pron|pronoun|1||",
+"zhal|they,them,their|他们,她们|pron|pronoun|1|Zhal vronk.::他们来了。::They are coming.",
+"sek|it,its|它|pron|pronoun|1||",
+"plav|water|水|n|nature|1|Kem flent plav.::我喝水。::I drink water.",
+"krost|fire,flame|火,火焰|n|nature|1||",
+"neld|earth,land|土地,大地|n|nature|1||",
+"zhurn|sky|天空|n|nature|1||",
+"vask|sun|太阳|n|nature|1|Vask kvarn.::太阳是热的。::The sun is hot.",
+"lurn|moon|月亮|n|nature|1||",
+"sterv|star,stars|星星|n|nature|1||",
+"bradn|tree,trees|树|n|nature|1||",
+"klem|flower,flowers|花|n|nature|1||",
+"groth|mountain,mountains|山,山脉|n|nature|1||",
+"flund|river|河,河流|n|nature|1||",
+"morv|sea,ocean|海,海洋|n|nature|1||",
+"zolm|light|光,光亮|n|nature|1||",
+"dusk|darkness,dark|黑暗,夜色|n|nature|1||",
+"mirk|name,what|名字,名称|n|people|1||",
+"drenth|friend,friends|朋友|n|people|1|Ta drenth kem.::你是我的朋友。::You are my friend.",
+"kav|home,house|家,居所|n|people|1|Osk tsald kav.::我们回家。::We go home.",
+"brent|city|城市|n|people|1|Kem tsald brent.::我去城市。::I go to the city.",
+"tresh|road,path|路,道路|n|people|1||",
+"kalf|book,books|书,书本|n|people|1||",
+"nurg|word,words|词,词语|n|people|1|Nurg 'cofdtld' pravt.::“cofdtld”这个词很好。::The word “cofdtld” is good.",
+"plost|sound,voice|声音,嗓音|n|people|1||",
+"drask|song,songs|歌,歌曲|n|people|1||",
+"tesk|story,stories|故事,传说|n|people|1||",
+"harn|heart|心,内心|n|abstract|1||",
+"vlest|love,loves|爱,爱情|n/v|abstract|1|Kem vlest ta.::我爱你。::I love you.",
+"sparn|hope|希望|n|abstract|1||",
+"grald|fear|恐惧,害怕|n|abstract|1||",
+"tarn|time|时间|n|abstract|1||",
+"slom|dream,dreams|梦,梦境|n|abstract|1|Kem vund slom.::我做梦了。::I dreamed.",
+"kriv|life|生命,生活|n|abstract|1||",
+"mordt|death|死,死亡|n|abstract|1||",
+"velt|world|世界|n|abstract|1||",
+"brolk|eat,eats,ate,eating|吃,进食|v|action|1||",
+"flent|drink,drinks,drank,drinking|喝,饮用|v|action|1||",
+"zark|walk,walks,walked,walking|走,行走|v|action|1||",
+"plim|run,runs,ran,running|跑,奔跑|v|action|1||",
+"vund|see,sees,saw,seeing|看,看见|v|action|1||",
+"hrask|hear,hears,heard,hearing|听,听见|v|action|1||",
+"klemd|speak,speaks,spoke,say,says,said|说,讲话|v|action|1||",
+"nirth|think,thinks,thought,thinking|想,思考|v|action|1||",
+"drost|know,knows,knew,knowing|知道,懂得|v|action|1||",
+"grelt|give,gives,gave,giving|给,赠予|v|action|1||",
+"slav|take,takes,took,taking|拿,取|v|action|1||",
+"vronk|come,comes,came,coming|来,到来|v|action|1||",
+"tsald|go,goes,went,going|去,前往|v|action|1||",
+"mirv|sleep,sleeps,slept,sleeping|睡,睡觉|v|action|1||",
+"kland|big,large|大,巨大|adj|adj|1||",
+"zif|small,little|小,微小|adj|adj|1||",
+"pravt|good,fine|好,美好|adj|adj|1||",
+"nusk|bad|坏,糟糕|adj|adj|1||",
+"tharn|new|新|adj|adj|1||",
+"gold|old|老,旧|adj|adj|1||",
+"vlim|fast,quick|快,迅速|adj|adj|1||",
+"slord|slow|慢,缓慢|adj|adj|1||",
+"kvarn|hot,warm|热,温暖|adj|adj|1||",
+"frild|cold|冷,寒冷|adj|adj|1|Plav frild.::水是冷的。::The water is cold.",
+"drovn|one|一|num|num|1||",
+"tsek|two|二|num|num|1||",
+"plorn|three|三|num|num|1||",
+"kvar|four|四|num|num|1||",
+"feln|five|五|num|num|1||",
+"et|and|和|conj|func|0||",
+"ov|of|的|prep|func|0||",
+"in|in,at,on|在|prep|func|0||",
+"tu|to|到|prep|func|0||",
+"fram|from|从|prep|func|0||",
+"vid|with|与|prep|func|0||",
+"por|for|为了|prep|func|0||",
+"kven|who|谁|pron|func|0||",
+"kver|where|哪里|adv|func|0||",
+"kvor|why|为什么|adv|func|0||",
+"kvol|how|怎么|adv|func|0||",
+"kvan|when|什么时候|adv|func|0||",
+"hav|have,has,had|有|v|func|0||",
+"volk|want,wants,wanted|想要|v|func|0||",
+"kan|can,could|能|v|func|0||",
+"dok|do,does,did|做|v|func|0||",
+"zis|this|这|pron|func|0||",
+"zat|that|那|pron|func|0||",
+"seks|six|六|num|func|0||",
+"sept|seven|七|num|func|0||",
+"okt|eight|八|num|func|0||",
+"non|nine|九|num|func|0||",
+"dekn|ten|十|num|func|0||"
+];
+
+function parseSeed(raw){
+  return raw.map(line=>{
+    const parts = line.split('|');
+    return {
+      cof: parts[0],
+      en:  parts[1].split(',').filter(Boolean),
+      zh:  parts[2].split(',').filter(Boolean),
+      pos: parts[3] || 'n',
+      cat: parts[4] || 'abstract',
+      core: parts[5] === '1',
+      ex:  parts[6] ? parts[6].split('::') : null
+    };
+  });
+}
+
+/* ============================================================
+   映射表
+   ============================================================ */
+const POS_ZH = {interj:'感叹词',pron:'代词',n:'名词',v:'动词',adj:'形容词',
+  num:'数词',adv:'副词',prep:'介词',conj:'连词',copula:'系词',
+  particle:'助词','n/v':'名词/动词'};
+const CAT_ZH = {greeting:'问候',pronoun:'代词',nature:'自然',people:'人与物',
+  abstract:'抽象',action:'动作',adj:'形容',num:'数词',func:'抽象'};
+
+const POS_EN = Object.fromEntries(Object.entries(POS_ZH).map(([k,v])=>[v,k]));
+const CAT_EN = Object.fromEntries(Object.entries(CAT_ZH).map(([k,v])=>[v,k]));
+
+/* ============================================================
+   状态
+   ============================================================ */
+const LS_KEY = 'cofdtld_lexicon_draft_v1';
+let entries = [];
+let editingIndex = -1;
+let fileHandle = null;
+
+const hasFS = 'showSaveFilePicker' in window && 'showOpenFilePicker' in window;
+
+/* ============================================================
+   DOM 引用
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const form = $('entryForm');
+const f_cof = $('f_cof'), f_en = $('f_en'), f_zh = $('f_zh');
+const f_pos = $('f_pos'), f_cat = $('f_cat'), f_core = $('f_core');
+const f_ex_cof = $('f_ex_cof'), f_ex_zh = $('f_ex_zh'), f_ex_en = $('f_ex_en');
+const formTitle = $('formTitle'), submitBtn = $('submitBtn'), cancelEditBtn = $('cancelEditBtn');
+const listEl = $('list'), statsEl = $('stats'), searchEl = $('search');
+const exportArea = $('exportArea');
+const toastEl = $('toast');
+
+/* ============================================================
+   工具函数
+   ============================================================ */
+function toast(msg, isError){
+  toastEl.textContent = msg;
+  toastEl.className = 'toast show' + (isError ? ' error' : '');
+  clearTimeout(toastEl._t);
+  toastEl._t = setTimeout(()=>{ toastEl.className = 'toast'; }, 2400);
+}
+
+function splitList(s){
+  return s.split(/[,，;；]/).map(x=>x.trim()).filter(Boolean);
+}
+
+function normalizeEntry(e){
+  if (!e) return null;
+  if (e.cof){
+    return {
+      cof: String(e.cof),
+      en: Array.isArray(e.en) ? e.en : (e.en ? splitList(String(e.en)) : []),
+      zh: Array.isArray(e.zh) ? e.zh : (e.zh ? splitList(String(e.zh)) : []),
+      pos: e.pos || 'n',
+      cat: e.cat || 'abstract',
+      core: e.core !== false,
+      ex: Array.isArray(e.ex) && e.ex.length === 3 ? e.ex.map(String) : null
+    };
+  }
+  if (e.w){
+    return {
+      cof: String(e.w),
+      en: e.en ? splitList(String(e.en)) : [],
+      zh: e.zh ? splitList(String(e.zh)) : [],
+      pos: POS_EN[e.pos] || 'n',
+      cat: CAT_EN[e.cat] || 'abstract',
+      core: true,
+      ex: Array.isArray(e.ex) && e.ex.length === 3 ? e.ex.map(String) : null
+    };
+  }
+  return null;
+}
+
+function persist(){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(entries)); }catch(e){}
+}
+
+function restore(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw){
+      const data = JSON.parse(raw);
+      if (Array.isArray(data) && data.length){
+        entries = data.map(normalizeEntry).filter(Boolean);
+        return true;
+      }
+    }
+  }catch(e){}
+  return false;
+}
+
+/* ============================================================
+   渲染
+   ============================================================ */
+function render(){
+  const q = searchEl.value.trim().toLowerCase();
+  const filtered = entries.filter(e=>{
+    if (!q) return true;
+    return e.cof.toLowerCase().includes(q)
+      || e.en.some(w=>w.toLowerCase().includes(q))
+      || e.zh.some(w=>w.includes(q));
+  });
+
+  const coreN = entries.filter(e=>e.core).length;
+  const funcN = entries.length - coreN;
+  statsEl.innerHTML = `共 <b>${entries.length}</b> 条 · 核心 <b>${coreN}</b> · 功能 <b>${funcN}</b>`
+    + (q ? ` · 筛选 <b>${filtered.length}</b>` : '');
+
+  if (!filtered.length){
+    listEl.innerHTML = `<div style="padding:36px;text-align:center;color:var(--muted);font-size:.85rem">
+      ${entries.length ? '没有匹配的词条' : '还没有词条，用左侧表单添加吧'}
+    </div>`;
+    return;
+  }
+
+  listEl.innerHTML = filtered.map(e=>{
+    const idx = entries.indexOf(e);
+    const tags = [];
+    if (!e.core) tags.push('<span class="tag func">func</span>');
+    if (e.ex) tags.push('<span class="tag ex">ex</span>');
+    return `
+      <div class="item${idx === editingIndex ? ' editing' : ''}" data-idx="${idx}">
+        <span class="cof">${escapeHtml(e.cof)}</span>
+        <span class="mean">
+          ${escapeHtml(e.zh.join(' / '))}
+          <span class="en">· ${escapeHtml(e.en.join(', '))}</span>
+        </span>
+        ${tags.join('')}
+        <span class="acts">
+          <button class="edit" data-idx="${idx}">编辑</button>
+          <button class="del" data-idx="${idx}">删除</button>
+        </span>
+      </div>`;
+  }).join('');
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ============================================================
+   表单操作
+   ============================================================ */
+function fillForm(e, idx){
+  f_cof.value = e.cof;
+  f_en.value = e.en.join(', ');
+  f_zh.value = e.zh.join(', ');
+  f_pos.value = POS_ZH[e.pos] ? e.pos : 'n';
+  f_cat.value = e.cat || 'abstract';
+  f_core.checked = e.core;
+  f_ex_cof.value = e.ex ? e.ex[0] : '';
+  f_ex_zh.value  = e.ex ? e.ex[1] : '';
+  f_ex_en.value  = e.ex ? e.ex[2] : '';
+  editingIndex = idx;
+  formTitle.textContent = '编辑词条';
+  submitBtn.textContent = '更新词条';
+  cancelEditBtn.style.display = '';
+  render();
+  f_cof.focus();
+}
+
+function resetForm(){
+  form.reset();
+  f_core.checked = true;
+  f_pos.value = 'n';
+  f_cat.value = 'abstract';
+  editingIndex = -1;
+  formTitle.textContent = '添加词条';
+  submitBtn.textContent = '添加词条';
+  cancelEditBtn.style.display = 'none';
+  render();
+}
+
+form.addEventListener('submit', ev=>{
+  ev.preventDefault();
+  const cof = f_cof.value.trim();
+  const en = splitList(f_en.value);
+  const zh = splitList(f_zh.value);
+
+  if (!cof){ toast('词形不能为空', true); return; }
+  if (!en.length){ toast('至少一个英文释义', true); return; }
+  if (!zh.length){ toast('至少一个中文释义', true); return; }
+
+  // 唯一性检查（编辑时排除自己）
+  const dup = entries.findIndex((e,i)=> i !== editingIndex && e.cof.toLowerCase() === cof.toLowerCase());
+  if (dup >= 0){ toast(`词形 "${cof}" 已存在（第 ${dup+1} 条）`, true); return; }
+
+  const ex = (f_ex_cof.value.trim() || f_ex_zh.value.trim() || f_ex_en.value.trim())
+    ? [f_ex_cof.value.trim(), f_ex_zh.value.trim(), f_ex_en.value.trim()]
+    : null;
+
+  const entry = {
+    cof,
+    en,
+    zh,
+    pos: f_pos.value,
+    cat: f_cat.value,
+    core: f_core.checked,
+    ex
+  };
+
+  if (editingIndex >= 0){
+    entries[editingIndex] = entry;
+    toast('已更新');
+  } else {
+    entries.push(entry);
+    toast('已添加');
+  }
+
+  persist();
+  resetForm();
+});
+
+cancelEditBtn.addEventListener('click', resetForm);
+
+/* ============================================================
+   列表交互
+   ============================================================ */
+listEl.addEventListener('click', ev=>{
+  const btn = ev.target.closest('button');
+  if (!btn) return;
+  const idx = Number(btn.dataset.idx);
+  if (Number.isNaN(idx) || !entries[idx]) return;
+
+  if (btn.classList.contains('edit')){
+    fillForm(entries[idx], idx);
+  } else if (btn.classList.contains('del')){
+    if (confirm(`删除 "${entries[idx].cof}" ？`)){
+      entries.splice(idx, 1);
+      if (editingIndex === idx) resetForm();
+      else if (editingIndex > idx) editingIndex--;
+      persist();
+      render();
+      toast('已删除');
+    }
+  }
+});
+
+searchEl.addEventListener('input', render);
+
+/* ============================================================
+   文件系统：保存 / 打开
+   ============================================================ */
+async function saveFile(forceDialog){
+  const data = JSON.stringify(entries, null, 2);
+  const name = 'cofdtld-lexicon.json';
+
+  // 优先 File System Access API
+  if (hasFS && !forceDialog && fileHandle){
+    try{
+      const perm = await fileHandle.requestPermission({mode:'readwrite'});
+      if (perm === 'granted'){
+        const w = await fileHandle.createWritable();
+        await w.write(data);
+        await w.close();
+        toast('已保存到文件');
+        return;
+      }
+    }catch(e){ /* 继续走对话框 */ }
+  }
+
+  if (hasFS){
+    try{
+      fileHandle = await window.showSaveFilePicker({
+        suggestedName: name,
+        types: [{description:'JSON', accept:{'application/json':['.json']}}]
+      });
+      const w = await fileHandle.createWritable();
+      await w.write(data);
+      await w.close();
+      toast('已保存到文件');
+      return;
+    }catch(e){
+      if (e.name === 'AbortError') return;
+      console.warn(e);
+    }
+  }
+
+  // 回退：下载
+  const blob = new Blob([data], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  toast('已下载 JSON 文件');
+}
+
+async function openFile(){
+  let text = null;
+
+  if (hasFS){
+    try{
+      const [handle] = await window.showOpenFilePicker({
+        types: [{description:'JSON', accept:{'application/json':['.json']}}]
+      });
+      fileHandle = handle;
+      const file = await handle.getFile();
+      text = await file.text();
+    }catch(e){
+      if (e.name === 'AbortError') return;
+      console.warn(e);
+    }
+  }
+
+  if (text === null){
+    text = await new Promise(resolve=>{
+      const inp = document.createElement('input');
+      inp.type = 'file';
+      inp.accept = '.json,application/json';
+      inp.onchange = async ()=>{
+        if (inp.files[0]) resolve(await inp.files[0].text());
+        else resolve(null);
+      };
+      inp.click();
+    });
+  }
+
+  if (!text) return;
+
+  try{
+    const raw = JSON.parse(text);
+    const list = Array.isArray(raw) ? raw : (raw.entries || raw.lexicon || []);
+    const normalized = list.map(normalizeEntry).filter(Boolean);
+    if (!normalized.length){
+      toast('文件中没有可识别的词条', true);
+      return;
+    }
+    const replace = confirm(
+      `导入 ${normalized.length} 个词条。\n\n确定 = 替换当前 ${entries.length} 条\n取消 = 合并（跳过重复词形）`
+    );
+    if (replace){
+      entries = normalized;
+    } else {
+      const exist = new Set(entries.map(e=>e.cof.toLowerCase()));
+      normalized.forEach(n=>{
+        if (!exist.has(n.cof.toLowerCase())){ entries.push(n); exist.add(n.cof.toLowerCase()); }
+      });
+    }
+    persist();
+    resetForm();
+    toast(`导入成功（${entries.length} 条）`);
+  }catch(err){
+    toast('JSON 解析失败：' + err.message, true);
+  }
+}
+
+/* ============================================================
+   按钮绑定
+   ============================================================ */
+$('btnOpen').addEventListener('click', openFile);
+$('btnSave').addEventListener('click', ()=>saveFile(false));
+$('btnSaveAs').addEventListener('click', ()=>saveFile(true));
+
+$('btnExport').addEventListener('click', ()=>{
+  const data = JSON.stringify(entries, null, 2);
+  const blob = new Blob([data], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'cofdtld-lexicon.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  toast('已下载 JSON');
+});
+
+$('btnSeed').addEventListener('click', ()=>{
+  if (entries.length && !confirm('用内置示例覆盖当前数据？')) return;
+  entries = parseSeed(SEED_RAW);
+  persist(); resetForm(); toast('已加载示例词库');
+});
+
+$('btnClearAll').addEventListener('click', ()=>{
+  if (!entries.length) return;
+  if (!confirm(`确定清空全部 ${entries.length} 条词条？`)) return;
+  entries = [];
+  persist(); resetForm(); toast('已清空');
+});
+
+/* ============================================================
+   代码片段生成
+   ============================================================ */
+function genTranslator(){
+  return entries.map(e=>{
+    const en = e.en.map(s=>JSON.stringify(s)).join(',');
+    const zh = e.zh.map(s=>JSON.stringify(s)).join(',');
+    return `  {cof:${JSON.stringify(e.cof)},en:[${en}],zh:[${zh}],pos:${JSON.stringify(e.pos)},cat:${JSON.stringify(e.cat)},core:${e.core}},`;
+  }).join('\n');
+}
+
+function genLexicon(){
+  return entries.filter(e=>e.core).map(e=>{
+    const zh = e.zh.join('；');
+    const en = e.en.join('; ');
+    let line = `  { w:${JSON.stringify(e.cof)}, pos:${JSON.stringify(POS_ZH[e.pos]||'名词')}, cat:${JSON.stringify(CAT_ZH[e.cat]||'抽象')}, zh:${JSON.stringify(zh)}, en:${JSON.stringify(en)}`;
+    if (e.ex) line += `,\n    ex:[${e.ex.map(s=>JSON.stringify(s)).join(',')}]`;
+    line += ' },';
+    return line;
+  }).join('\n');
+}
+
+$('btnGenTranslator').addEventListener('click', ()=>{
+  exportArea.value = genTranslator();
+  toast('已生成 Translator 格式');
+});
+$('btnGenLexicon').addEventListener('click', ()=>{
+  exportArea.value = genLexicon();
+  toast('已生成 Lexicon 格式（仅核心词）');
+});
+$('btnCopy').addEventListener('click', async ()=>{
+  if (!exportArea.value){ toast('先生成代码片段', true); return; }
+  try{
+    await navigator.clipboard.writeText(exportArea.value);
+    toast('已复制到剪贴板');
+  }catch(e){
+    exportArea.select();
+    document.execCommand('copy');
+    toast('已复制');
+  }
+});
+
+/* ============================================================
+   初始化
+   ============================================================ */
+(function init(){
+  // 文件系统支持状态
+  const dot = $('fsDot'), txt = $('fsText');
+  if (hasFS){
+    dot.classList.add('fs');
+    txt.textContent = '支持本地文件读写';
+    txt.title = 'Chrome / Edge：可直接打开和保存本地 JSON 文件';
+  } else {
+    dot.classList.add('ok');
+    txt.textContent = '下载 / 上传模式';
+    txt.title = '当前浏览器不支持 File System Access API，使用下载与上传文件的方式';
+  }
+
+  // 恢复草稿或加载示例
+  if (!restore()){
+    entries = parseSeed(SEED_RAW);
+  }
+  render();
+})();
+</script>
+</body>
+</html>
