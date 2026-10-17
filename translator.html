@@ -149,7 +149,6 @@
    core:false 表示翻译器扩展词，页面上会标注
    ============================================================ */
 const ENTRIES = [
-  /* -------- 核心 75 -------- */
   {cof:"cofdtld",en:["hello","hi"],zh:["你好"],pos:"interj",cat:"greeting",core:true},
   {cof:"vren",en:["goodbye","bye"],zh:["再见"],pos:"interj",cat:"greeting",core:true},
   {cof:"thalm",en:["thanks","thank"],zh:["谢谢","感谢"],pos:"interj",cat:"greeting",core:true},
@@ -172,14 +171,14 @@ const ENTRIES = [
   {cof:"sterv",en:["star","stars"],zh:["星星"],pos:"n",cat:"nature",core:true},
   {cof:"bradn",en:["tree","trees"],zh:["树"],pos:"n",cat:"nature",core:true},
   {cof:"klem",en:["flower","flowers"],zh:["花"],pos:"n",cat:"nature",core:true},
-  {cof:"groth",en:["mountain","mountains"],zh:["山"],pos:"n",cat:"nature",core:true},
+  {cof:"groth",en:["mountain","mountains"],zh:["山","山脉"],pos:"n",cat:"nature",core:true},
   {cof:"flund",en:["river"],zh:["河","河流"],pos:"n",cat:"nature",core:true},
   {cof:"morv",en:["sea","ocean"],zh:["海","海洋"],pos:"n",cat:"nature",core:true},
   {cof:"zolm",en:["light"],zh:["光","光亮"],pos:"n",cat:"nature",core:true},
   {cof:"dusk",en:["darkness","dark"],zh:["黑暗","夜色"],pos:"n",cat:"nature",core:true},
-  {cof:"mirk",en:["name","what"],zh:["名字","什么"],pos:"n",cat:"people",core:true},
+  {cof:"mirk",en:["name","what"],zh:["名字","名称"],pos:"n",cat:"people",core:true},
   {cof:"drenth",en:["friend","friends"],zh:["朋友"],pos:"n",cat:"people",core:true},
-  {cof:"kav",en:["home","house"],zh:["家"],pos:"n",cat:"people",core:true},
+  {cof:"kav",en:["home","house"],zh:["家","居所"],pos:"n",cat:"people",core:true},
   {cof:"brent",en:["city"],zh:["城市"],pos:"n",cat:"people",core:true},
   {cof:"tresh",en:["road","path"],zh:["路","道路"],pos:"n",cat:"people",core:true},
   {cof:"kalf",en:["book","books"],zh:["书","书本"],pos:"n",cat:"people",core:true},
@@ -225,8 +224,6 @@ const ENTRIES = [
   {cof:"plorn",en:["three"],zh:["三"],pos:"num",cat:"num",core:true},
   {cof:"kvar",en:["four"],zh:["四"],pos:"num",cat:"num",core:true},
   {cof:"feln",en:["five"],zh:["五"],pos:"num",cat:"num",core:true},
-
-  /* -------- 翻译器扩展词 23 -------- */
   {cof:"et",en:["and"],zh:["和"],pos:"conj",cat:"func",core:false},
   {cof:"ov",en:["of"],zh:["的"],pos:"prep",cat:"func",core:false},
   {cof:"in",en:["in","at","on"],zh:["在"],pos:"prep",cat:"func",core:false},
@@ -249,7 +246,8 @@ const ENTRIES = [
   {cof:"sept",en:["seven"],zh:["七"],pos:"num",cat:"func",core:false},
   {cof:"okt",en:["eight"],zh:["八"],pos:"num",cat:"func",core:false},
   {cof:"non",en:["nine"],zh:["九"],pos:"num",cat:"func",core:false},
-  {cof:"dekn",en:["ten"],zh:["十"],pos:"num",cat:"func",core:false}
+  {cof:"dekn",en:["ten"],zh:["十"],pos:"num",cat:"func",core:false},
+  {cof:"reree",en:["error"],zh:["错误"],pos:"n",cat:"abstract",core:true},
 ];
 
 /* ---------- 构建索引 ---------- */
