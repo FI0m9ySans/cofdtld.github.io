@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cofdtld Learner · Cofdtld 学习器</title>
+<style>
+:root{
+  --bg:#0e1116;--panel:#161b22;--panel2:#1d242e;--line:#2b3542;
+  --text:#e6edf5;--muted:#8b9bb0;--accent:#6ee7b7;--accent2:#38bdf8;
+  --warn:#fbbf24;--bad:#f87171;--good:#34d399;--radius:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+  background:radial-gradient(1100px 550px at 15% -10%,#1a2b3c 0%,transparent 60%),var(--bg);
+  color:var(--text);min-height:100vh;line-height:1.5;
+}
+a{color:var(--accent2)}
+header{
+  position:sticky;top:0;z-index:10;
+  background:rgba(14,17,22,.85);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.header-inner{
+  max-width:960px;margin:0 auto;padding:12px 16px;
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+}
+.logo{font-weight:800;letter-spacing:.5px;font-size:18px}
+.logo span{color:var(--accent)}
+.spacer{flex:1}
+.lang-switch{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.lang-switch button{
+  background:transparent;color:var(--muted);border:0;padding:5px 12px;
+  font-size:13px;cursor:pointer;font-weight:600;
+}
+.lang-switch button.active{background:var(--accent);color:#06281c}
+nav{
+  max-width:960px;margin:0 auto;padding:0 16px 10px;
+  display:flex;gap:6px;overflow-x:auto;
+}
+nav button{
+  background:var(--panel);color:var(--muted);border:1px solid var(--line);
+  padding:7px 14px;border-radius:999px;font-size:13px;cursor:pointer;
+  white-space:nowrap;font-weight:600;transition:.15s;
+}
+nav button.active{background:var(--accent2);color:#04121c;border-color:var(--accent2)}
+main{max-width:960px;margin:0 auto;padding:20px 16px 80px}
+.view{display:none}
+.view.active{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+h1{font-size:22px;margin:0 0 4px}
+h2{font-size:16px;margin:0 0 12px;color:var(--muted);font-weight:600}
+.sub{color:var(--muted);font-size:13px;margin:0 0 18px}
+.panel{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px;margin-bottom:16px;
+}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:18px}
+.stat{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:14px;text-align:center;
+}
+.stat .num{font-size:26px;font-weight:800;color:var(--accent)}
+.stat .lbl{font-size:12px;color:var(--muted);margin-top:2px}
+.btn{
+  background:var(--accent);color:#06281c;border:0;padding:10px 18px;
+  border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;transition:.15s;
+}
+.btn:hover{filter:brightness(1.08)}
+.btn.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+.btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+.btn.big{padding:14px 26px;font-size:16px;width:100%}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap}
+/* Card */
+.card{perspective:1200px;cursor:pointer;margin-bottom:16px}
+.card-inner{
+  position:relative;transform-style:preserve-3d;transition:transform .45s cubic-bezier(.4,.2,.2,1);
+  min-height:230px;
+}
+.card.flipped .card-inner{transform:rotateY(180deg)}
+.card-face{
+  position:absolute;inset:0;backface-visibility:hidden;
+  background:linear-gradient(160deg,var(--panel2),var(--panel));
+  border:1px solid var(--line);border-radius:18px;padding:24px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;overflow:auto;
+}
+.card-face.back{transform:rotateY(180deg)}
+.word{font-size:38px;font-weight:800;letter-spacing:1px;color:var(--accent)}
+.mnem{font-size:14px;color:var(--muted);margin-top:6px}
+.pos-tag{
+  display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;
+  background:var(--panel);border:1px solid var(--line);color:var(--muted);margin-top:10px;
+}
+.mean{font-size:22px;font-weight:700;margin-bottom:6px}
+.ex{margin-top:14px;font-size:14px;color:var(--muted);line-height:1.7;max-width:520px}
+.ex .c{color:var(--accent2);font-weight:600}
+.hint{font-size:12px;color:var(--muted);margin-top:16px}
+/* Quiz */
+.q-head{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:14px}
+.q-prompt{font-size:26px;font-weight:800;text-align:center;margin:12px 0 22px;min-height:40px}
+.q-prompt .lbl{display:block;font-size:12px;color:var(--muted);font-weight:500;margin-bottom:6px}
+.options{display:grid;gap:10px}
+.option{
+  background:var(--panel2);border:1px solid var(--line);color:var(--text);
+  padding:14px 16px;border-radius:12px;font-size:15px;cursor:pointer;
+  text-align:left;transition:.12s;font-weight:600;
+}
+.option:hover:not(:disabled){border-color:var(--accent2)}
+.option.correct{background:rgba(52,211,153,.18);border-color:var(--good);color:var(--good)}
+.option.wrong{background:rgba(248,113,113,.18);border-color:var(--bad);color:var(--bad)}
+.option:disabled{cursor:default}
+.feedback{margin-top:14px;padding:12px 14px;border-radius:10px;font-size:14px;display:none}
+.feedback.show{display:block}
+.feedback.ok{background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.4);color:var(--good)}
+.feedback.no{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.4);color:var(--bad)}
+/* Dictionary */
+.search{
+  width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--line);
+  background:var(--panel2);color:var(--text);font-size:14px;margin-bottom:14px;
+}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.chip{
+  background:var(--panel2);border:1px solid var(--line);color:var(--muted);
+  padding:5px 12px;border-radius:999px;font-size:12px;cursor:pointer;font-weight:600;
+}
+.chip.active{background:var(--accent2);color:#04121c;border-color:var(--accent2)}
+.dict-list{display:grid;gap:8px}
+.dict-item{
+  background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  padding:12px 14px;display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;
+}
+.dict-item .w{font-size:16px;font-weight:800;color:var(--accent);min-width:90px}
+.dict-item .m{font-size:14px;flex:1}
+.dict-item .meta{font-size:11px;color:var(--muted)}
+/* Phrase */
+.phrase{
+  background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  padding:14px 16px;margin-bottom:10px;
+}
+.phrase .c{font-size:17px;font-weight:700;color:var(--accent2);margin-bottom:4px}
+.phrase .t{font-size:14px}
+.phrase .e{font-size:13px;color:var(--muted);margin-top:2px}
+/* Progress bar */
+.pbar{height:6px;background:var(--panel2);border-radius:999px;overflow:hidden;margin-top:8px}
+.pbar > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0;transition:width .3s}
+.empty{text-align:center;color:var(--muted);padding:30px 10px;font-size:14px}
+@media(max-width:520px){
+  .word{font-size:30px}
+  .q-prompt{font-size:21px}
+  .card-face{min-height:210px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">Cof<span>dtld</span> Learner</div>
+    <div class="spacer"></div>
+    <div class="lang-switch">
+      <button id="lang-zh" onclick="setLang('zh')">中文</button>
+      <button id="lang-en" onclick="setLang('en')">EN</button>
+    </div>
+  </div>
+  <nav id="nav"></nav>
+</header>
+
+<main>
+  <section class="view" id="view-dashboard"></section>
+  <section class="view" id="view-learn"></section>
+  <section class="view" id="view-review"></section>
+  <section class="view" id="view-quiz"></section>
+  <section class="view" id="view-dict"></section>
+  <section class="view" id="view-phrases"></section>
+</main>
+
+<script>
+/* =====================================================================
+   DATA
+   ===================================================================== */
+const WORDS = [
+{w:"cofdtld",en:["hello","hi"],zh:["你好"],pos:"interj",cat:"greeting",core:true,mn:"科夫德特尔德",ex:{c:"Cofdtld, drenth!",z:"你好，朋友！",e:"Hello, friend!"}},
+{w:"vren",en:["goodbye","bye"],zh:["再见"],pos:"interj",cat:"greeting",core:true,mn:"弗仁",ex:{c:"Vren, osk vronk!",z:"再见，我们会再来的！",e:"Goodbye, we will come again!"}},
+{w:"thalm",en:["thanks","thank"],zh:["谢谢","感谢"],pos:"interj",cat:"greeting",core:true,mn:"塔勒姆",ex:{c:"Thalm, ta pravt.",z:"谢谢，你真好。",e:"Thank you, you are kind."}},
+{w:"skorv",en:["please"],zh:["请"],pos:"adv",cat:"greeting",core:true,mn:"斯科夫"},
+{w:"nu",en:["yes","is","am","are","be"],zh:["是","对","确实"],pos:"copula",cat:"greeting",core:true,mn:"努"},
+{w:"dro",en:["no","not"],zh:["不","不是","没"],pos:"particle",cat:"greeting",core:true,mn:"德罗"},
+{w:"kem",en:["i","me","my"],zh:["我"],pos:"pron",cat:"pronoun",core:true,mn:"凯姆"},
+{w:"ta",en:["you","your"],zh:["你"],pos:"pron",cat:"pronoun",core:true,mn:"塔",ex:{c:"Mirk ta?",z:"你叫什么名字？",e:"What is your name?"}},
+{w:"vor",en:["he","him","his"],zh:["他"],pos:"pron",cat:"pronoun",core:true,mn:"沃尔"},
+{w:"lind",en:["she","her","hers"],zh:["她"],pos:"pron",cat:"pronoun",core:true,mn:"林德"},
+{w:"osk",en:["we","us","our"],zh:["我们"],pos:"pron",cat:"pronoun",core:true,mn:"奥斯克"},
+{w:"zhal",en:["they","them","their"],zh:["他们","她们"],pos:"pron",cat:"pronoun",core:true,mn:"扎尔",ex:{c:"Zhal vronk.",z:"他们来了。",e:"They are coming."}},
+{w:"sek",en:["it","its"],zh:["它"],pos:"pron",cat:"pronoun",core:true,mn:"塞克"},
+{w:"plav",en:["water"],zh:["水"],pos:"n",cat:"nature",core:true,mn:"普拉夫",ex:{c:"Kem flent plav.",z:"我喝水。",e:"I drink water."}},
+{w:"krost",en:["fire","flame"],zh:["火","火焰"],pos:"n",cat:"nature",core:true,mn:"克罗斯特"},
+{w:"neld",en:["earth","land"],zh:["土地","大地"],pos:"n",cat:"nature",core:true,mn:"内尔德"},
+{w:"zhurn",en:["sky"],zh:["天空"],pos:"n",cat:"nature",core:true,mn:"茹恩"},
+{w:"vask",en:["sun"],zh:["太阳"],pos:"n",cat:"nature",core:true,mn:"瓦斯克",ex:{c:"Vask kvarn.",z:"太阳是热的。",e:"The sun is hot."}},
+{w:"lurn",en:["moon"],zh:["月亮"],pos:"n",cat:"nature",core:true,mn:"卢恩"},
+{w:"sterv",en:["star","stars"],zh:["星星"],pos:"n",cat:"nature",core:true,mn:"斯特夫"},
+{w:"bradn",en:["tree","trees"],zh:["树"],pos:"n",cat:"nature",core:true,mn:"布拉登"},
+{w:"klem",en:["flower","flowers"],zh:["花"],pos:"n",cat:"nature",core:true,mn:"克莱姆"},
+{w:"groth",en:["mountain","mountains"],zh:["山","山脉"],pos:"n",cat:"nature",core:true,mn:"格罗斯"},
+{w:"flund",en:["river"],zh:["河","河流"],pos:"n",cat:"nature",core:true,mn:"弗伦德"},
+{w:"morv",en:["sea","ocean"],zh:["海","海洋"],pos:"n",cat:"nature",core:true,mn:"莫夫"},
+{w:"zolm",en:["light"],zh:["光","光亮"],pos:"n",cat:"nature",core:true,mn:"佐尔姆"},
+{w:"dusk",en:["darkness","dark"],zh:["黑暗","夜色"],pos:"n",cat:"nature",core:true,mn:"杜斯克"},
+{w:"mirk",en:["name","what"],zh:["名字","名称"],pos:"n",cat:"people",core:true,mn:"米尔克"},
+{w:"drenth",en:["friend","friends"],zh:["朋友"],pos:"n",cat:"people",core:true,mn:"德伦斯",ex:{c:"Ta drenth kem.",z:"你是我的朋友。",e:"You are my friend."}},
+{w:"kav",en:["home","house"],zh:["家","居所"],pos:"n",cat:"people",core:true,mn:"卡夫",ex:{c:"Osk tsald kav.",z:"我们回家。",e:"We go home."}},
+{w:"brent",en:["city"],zh:["城市"],pos:"n",cat:"people",core:true,mn:"布伦特",ex:{c:"Kem tsald brent.",z:"我去城市。",e:"I go to the city."}},
+{w:"tresh",en:["road","path"],zh:["路","道路"],pos:"n",cat:"people",core:true,mn:"特雷什"},
+{w:"kalf",en:["book","books"],zh:["书","书本"],pos:"n",cat:"people",core:true,mn:"卡尔夫"},
+{w:"nurg",en:["word","words"],zh:["词","词语"],pos:"n",cat:"people",core:true,mn:"努尔格",ex:{c:"Nurg 'cofdtld' pravt.",z:"“cofdtld”这个词很好。",e:"The word 'cofdtld' is good."}},
+{w:"plost",en:["sound","voice"],zh:["声音","嗓音"],pos:"n",cat:"people",core:true,mn:"普洛斯特"},
+{w:"drask",en:["song","songs"],zh:["歌","歌曲"],pos:"n",cat:"people",core:true,mn:"德拉斯克"},
+{w:"tesk",en:["story","stories"],zh:["故事","传说"],pos:"n",cat:"people",core:true,mn:"特斯克"},
+{w:"harn",en:["heart"],zh:["心","内心"],pos:"n",cat:"abstract",core:true,mn:"哈恩"},
+{w:"vlest",en:["love","loves"],zh:["爱","爱情"],pos:"n/v",cat:"abstract",core:true,mn:"弗莱斯特",ex:{c:"Kem vlest ta.",z:"我爱你。",e:"I love you."}},
+{w:"sparn",en:["hope"],zh:["希望"],pos:"n",cat:"abstract",core:true,mn:"斯帕恩"},
+{w:"grald",en:["fear"],zh:["恐惧","害怕"],pos:"n",cat:"abstract",core:true,mn:"格拉尔德"},
+{w:"tarn",en:["time"],zh:["时间"],pos:"n",cat:"abstract",core:true,mn:"塔恩"},
+{w:"slom",en:["dream","dreams"],zh:["梦","梦境"],pos:"n",cat:"abstract",core:true,mn:"斯洛姆",ex:{c:"Kem vund slom.",z:"我做梦了。",e:"I dreamed."}},
+{w:"kriv",en:["life"],zh:["生命","生活"],pos:"n",cat:"abstract",core:true,mn:"克里夫"},
+{w:"mordt",en:["death"],zh:["死","死亡"],pos:"n",cat:"abstract",core:true,mn:"莫尔特"},
+{w:"velt",en:["world"],zh:["世界"],pos:"n",cat:"abstract",core:true,mn:"维尔特"},
+{w:"brolk",en:["eat","eats","ate","eating"],zh:["吃","进食"],pos:"v",cat:"action",core:true,mn:"布罗尔克"},
+{w:"flent",en:["drink","drinks","drank","drinking"],zh:["喝","饮用"],pos:"v",cat:"action",core:true,mn:"弗伦特"},
+{w:"zark",en:["walk","walks","walked","walking"],zh:["走","行走"],pos:"v",cat:"action",core:true,mn:"扎尔克"},
+{w:"plim",en:["run","runs","ran","running"],zh:["跑","奔跑"],pos:"v",cat:"action",core:true,mn:"普利姆"},
+{w:"vund",en:["see","sees","saw","seeing"],zh:["看","看见"],pos:"v",cat:"action",core:true,mn:"文德"},
+{w:"hrask",en:["hear","hears","heard","hearing"],zh:["听","听见"],pos:"v",cat:"action",core:true,mn:"赫拉斯克"},
+{w:"klemd",en:["speak","speaks","spoke","say","says","said"],zh:["说","讲话"],pos:"v",cat:"action",core:true,mn:"克莱姆德"},
+{w:"nirth",en:["think","thinks","thought","thinking"],zh:["想","思考"],pos:"v",cat:"action",core:true,mn:"尼尔思"},
+{w:"drost",en:["know","knows","knew","knowing"],zh:["知道","懂得"],pos:"v",cat:"action",core:true,mn:"德罗斯特"},
+{w:"grelt",en:["give","gives","gave","giving"],zh:["给","赠予"],pos:"v",cat:"action",core:true,mn:"格雷尔特"},
+{w:"slav",en:["take","takes","took","taking"],zh:["拿","取"],pos:"v",cat:"action",core:true,mn:"斯拉夫"},
+{w:"vronk",en:["come","comes","came","coming"],zh:["来","到来"],pos:"v",cat:"action",core:true,mn:"弗龙克"},
+{w:"tsald",en:["go","goes","went","going"],zh:["去","前往"],pos:"v",cat:"action",core:true,mn:"察尔德"},
+{w:"mirv",en:["sleep","sleeps","slept","sleeping"],zh:["睡","睡觉"],pos:"v",cat:"action",core:true,mn:"米尔夫"},
+{w:"kland",en:["big","large"],zh:["大","巨大"],pos:"adj",cat:"adj",core:true,mn:"克兰德"},
+{w:"zif",en:["small","little"],zh:["小","微小"],pos:"adj",cat:"adj",core:true,mn:"齐夫"},
+{w:"pravt",en:["good","fine"],zh:["好","美好"],pos:"adj",cat:"adj",core:true,mn:"普拉夫特"},
+{w:"nusk",en:["bad"],zh:["坏","糟糕"],pos:"adj",cat:"adj",core:true,mn:"努斯克"},
+{w:"tharn",en:["new"],zh:["新"],pos:"adj",cat:"adj",core:true,mn:"塔恩"},
+{w:"gold",en:["old"],zh:["老","旧"],pos:"adj",cat:"adj",core:true,mn:"戈尔德"},
+{w:"vlim",en:["fast","quick"],zh:["快","迅速"],pos:"adj",cat:"adj",core:true,mn:"弗利姆"},
+{w:"slord",en:["slow"],zh:["慢","缓慢"],pos:"adj",cat:"adj",core:true,mn:"斯洛尔德"},
+{w:"kvarn",en:["hot","warm"],zh:["热","温暖"],pos:"adj",cat:"adj",core:true,mn:"克瓦恩"},
+{w:"frild",en:["cold"],zh:["冷","寒冷"],pos:"adj",cat:"adj",core:true,mn:"弗林德",ex:{c:"Plav frild.",z:"水是冷的。",e:"The water is cold."}},
+{w:"drovn",en:["one"],zh:["一"],pos:"num",cat:"num",core:true,mn:"德罗文"},
+{w:"tsek",en:["two"],zh:["二"],pos:"num",cat:"num",core:true,mn:"采克"},
+{w:"plorn",en:["three"],zh:["三"],pos:"num",cat:"num",core:true,mn:"普洛恩"},
+{w:"kvar",en:["four"],zh:["四"],pos:"num",cat:"num",core:true,mn:"克瓦尔"},
+{w:"feln",en:["five"],zh:["五"],pos:"num",cat:"num",core:true,mn:"费尔恩"},
+{w:"et",en:["and"],zh:["和"],pos:"conj",cat:"func",core:false,mn:"埃特"},
+{w:"ov",en:["of"],zh:["的"],pos:"prep",cat:"func",core:false,mn:"奥夫"},
+{w:"in",en:["in","at","on"],zh:["在"],pos:"prep",cat:"func",core:false,mn:"因"},
+{w:"tu",en:["to"],zh:["到"],pos:"prep",cat:"func",core:false,mn:"图"},
+{w:"fram",en:["from"],zh:["从"],pos:"prep",cat:"func",core:false,mn:"弗拉姆"},
+{w:"vid",en:["with"],zh:["与"],pos:"prep",cat:"func",core:false,mn:"维德"},
+{w:"por",en:["for"],zh:["为了"],pos:"prep",cat:"func",core:false,mn:"波尔"},
+{w:"kven",en:["who"],zh:["谁"],pos:"pron",cat:"func",core:false,mn:"克文"},
+{w:"kver",en:["where"],zh:["哪里"],pos:"adv",cat:"func",core:false,mn:"克维尔"},
+{w:"kvor",en:["why"],zh:["为什么"],pos:"adv",cat:"func",core:false,mn:"克沃尔"},
+{w:"kvol",en:["how"],zh:["怎么"],pos:"adv",cat:"func",core:false,mn:"克沃勒"},
+{w:"kvan",en:["when"],zh:["什么时候"],pos:"adv",cat:"func",core:false,mn:"克万"},
+{w:"hav",en:["have","has","had"],zh:["有"],pos:"v",cat:"func",core:false,mn:"哈夫"},
+{w:"volk",en:["want","wants","wanted"],zh:["想要"],pos:"v",cat:"func",core:false,mn:"沃尔克"},
+{w:"kan",en:["can","could"],zh:["能"],pos:"v",cat:"func",core:false,mn:"坎"},
+{w:"dok",en:["do","does","did"],zh:["做"],pos:"v",cat:"func",core:false,mn:"多克"},
+{w:"zis",en:["this"],zh:["这"],pos:"pron",cat:"func",core:false,mn:"齐斯"},
+{w:"zat",en:["that"],zh:["那"],pos:"pron",cat:"func",core:false,mn:"扎特"},
+{w:"seks",en:["six"],zh:["六"],pos:"num",cat:"func",core:false,mn:"塞克斯"},
+{w:"sept",en:["seven"],zh:["七"],pos:"num",cat:"func",core:false,mn:"塞普特"},
+{w:"okt",en:["eight"],zh:["八"],pos:"num",cat:"func",core:false,mn:"奥克特"},
+{w:"non",en:["nine"],zh:["九"],pos:"num",cat:"func",core:false,mn:"农"},
+{w:"dekn",en:["ten"],zh:["十"],pos:"num",cat:"func",core:false,mn:"德肯"},
+{w:"reree",en:["error"],zh:["错误"],pos:"n",cat:"abstract",core:true,mn:"雷雷",ex:{c:"Reree!",z:"错误！",e:"Error!"}},
+{w:"mokeif",en:["crazy"],zh:["疯狂"],pos:"n",cat:"abstract",core:true,mn:"莫凯夫",ex:{c:"Cofdtld, kem mokeif!",z:"你好，我很疯狂！",e:"Hi, I'm crazy!"}},
+{w:"irefd",en:["done","ok"],zh:["了"],pos:"n",cat:"abstract",core:true,mn:"伊雷夫德"},
+{w:"frdefg",en:["game"],zh:["游戏"],pos:"n",cat:"abstract",core:true,mn:"弗尔德夫格"},
+{w:"fideop",en:["play"],zh:["玩"],pos:"v",cat:"people",core:true,mn:"菲德奥普",ex:{c:"Fideop frdefg.",z:"玩游戏。",e:"Play game."}},
+{w:"kv",en:["what"],zh:["什么"],pos:"n",cat:"abstract",core:true,mn:"克夫"}
+];
+
+const PHRASES = [
+ {c:"Cofdtld, drenth!", z:"你好，朋友！", e:"Hello, friend!"},
+ {c:"Vren, osk vronk!", z:"再见，我们会再来的！", e:"Goodbye, we will come again!"},
+ {c:"Thalm, ta pravt.", z:"谢谢，你真好。", e:"Thank you, you are kind."},
+ {c:"Mirk ta?", z:"你叫什么名字？", e:"What is your name?"},
+ {c:"Zhal vronk.", z:"他们来了。", e:"They are coming."},
+ {c:"Kem flent plav.", z:"我喝水。", e:"I drink water."},
+ {c:"Vask kvarn.", z:"太阳是热的。", e:"The sun is hot."},
+ {c:"Ta drenth kem.", z:"你是我的朋友。", e:"You are my friend."},
+ {c:"Osk tsald kav.", z:"我们回家。", e:"We go home."},
+ {c:"Kem tsald brent.", z:"我去城市。", e:"I go to the city."},
+ {c:"Kem vlest ta.", z:"我爱你。", e:"I love you."},
+ {c:"Kem vund slom.", z:"我做梦了。", e:"I dreamed."},
+ {c:"Plav frild.", z:"水是冷的。", e:"The water is cold."},
+ {c:"Reree!", z:"错误！", e:"Error!"},
+ {c:"Cofdtld, kem mokeif!", z:"你好，我很疯狂！", e:"Hi, I'm crazy!"},
+ {c:"Fideop frdefg.", z:"玩游戏。", e:"Play game."},
+ {c:"Kem dro flent plav.", z:"我不喝水。（暂定句型）", e:"I do not drink water. (provisional)"}
+];
+
+/* =====================================================================
+   i18n
+   ===================================================================== */
+const I18N = {
+  zh: {
+    nav: {dashboard:"仪表盘", learn:"学习", review:"复习", quiz:"测验", dict:"词典", phrases:"常用句"},
+    learned:"已学", mastered:"掌握", due:"待复习", total:"总词数",
+    welcome:"欢迎来到 Cofdtld 学习器", tagline:"基于间隔重复的记忆训练。每天 10–15 分钟，比看一遍有用。",
+    startLearn:"开始学习新词", startReview:"开始复习", startQuiz:"随机测验",
+    learnTitle:"学习新词", learnDesc:"一次 5 个新词。翻卡看释义，学完自动进入复习队列。",
+    reviewTitle:"复习", reviewDesc:"按间隔重复算法抽取到期词。答对升级，答错降回第 1 盒。",
+    quizTitle:"测验", quizDesc:"随机抽题，不影响复习进度，用来检验记忆。",
+    dictTitle:"词典", dictDesc:"搜索、按类别筛选全部词条。",
+    phrasesTitle:"常用句", phrasesDesc:"背下这些句子，就能开口。",
+    noDue:"目前没有到期复习的词。先去学习新词，或者做一次随机测验。",
+    noNew:"所有词都学过了！去复习吧。",
+    flipHint:"点击卡片翻转",
+    meaning:"释义", next:"下一个", finish:"完成本组",
+    questionWhat:"这个词是什么意思？", questionHow:"这个词用 Cofdtld 怎么说？",
+    correct:"正确！", wrong:"不对。正确答案是：",
+    continueBtn:"继续", sessionDone:"本组完成",
+    sessionStats:"答对 {c} 题，答错 {w} 题",
+    learnDone:"这组学完了", learnDoneDesc:"这 5 个词已加入复习队列，明天会再见到它们。",
+    startNext:"再来一组", backHome:"回到仪表盘",
+    qProgress:"第 {i} / {n} 题", posLabel:"词性", catLabel:"类别",
+    searchPlaceholder:"搜索 Cofdtld / 中文 / English…",
+    all:"全部", core:"核心", func:"功能词",
+    noResult:"没有匹配的词条。",
+    today:"今日推荐", progressLabel:"学习进度",
+    reset:"重置学习进度", resetConfirm:"确定要清空所有学习进度吗？",
+    dueCount:"{n} 个词到期", noDueShort:"暂无到期",
+    masteredOf:"已掌握 {a} / {b}",
+    langName:"中文"
+  },
+  en: {
+    nav: {dashboard:"Dashboard", learn:"Learn", review:"Review", quiz:"Quiz", dict:"Dictionary", phrases:"Phrases"},
+    learned:"Learned", mastered:"Mastered", due:"Due", total:"Total",
+    welcome:"Welcome to Cofdtld Learner", tagline:"Spaced-repetition training. 10–15 minutes a day beats a single read-through.",
+    startLearn:"Learn new words", startReview:"Start review", startQuiz:"Random quiz",
+    learnTitle:"Learn new words", learnDesc:"5 new words per session. Flip the card to see the meaning.",
+    reviewTitle:"Review", reviewDesc:"Words due by the spaced-repetition schedule. Right = move up a box, wrong = back to box 1.",
+    quizTitle:"Quiz", quizDesc:"Random questions. Doesn't affect review progress.",
+    dictTitle:"Dictionary", dictDesc:"Search and filter all entries.",
+    phrasesTitle:"Phrases", phrasesDesc:"Memorise these to start speaking.",
+    noDue:"Nothing due right now. Learn new words or take a random quiz.",
+    noNew:"All words learned! Go review.",
+    flipHint:"Click the card to flip",
+    meaning:"Meaning", next:"Next", finish:"Finish set",
+    questionWhat:"What does this word mean?", questionHow:"How do you say this in Cofdtld?",
+    correct:"Correct!", wrong:"Not quite. Correct answer:",
+    continueBtn:"Continue", sessionDone:"Set complete",
+    sessionStats:"{c} correct, {w} wrong",
+    learnDone:"Set complete", learnDoneDesc:"These 5 words were added to your review queue.",
+    startNext:"Another set", backHome:"Back to dashboard",
+    qProgress:"Question {i} / {n}", posLabel:"POS", catLabel:"Category",
+    searchPlaceholder:"Search Cofdtld / English / 中文…",
+    all:"All", core:"Core", func:"Function",
+    noResult:"No matching entries.",
+    today:"Today's suggestion", progressLabel:"Progress",
+    reset:"Reset progress", resetConfirm:"Clear all learning progress?",
+    dueCount:"{n} words due", noDueShort:"Nothing due",
+    masteredOf:"Mastered {a} / {b}",
+    langName:"English"
+  }
+};
+
+const POS_ZH = {interj:"感叹词",adv:"副词",copula:"系词",particle:"助词",pron:"代词",n:"名词","n/v":"名词/动词",v:"动词",adj:"形容词",num:"数词",conj:"连词",prep:"介词"};
+const POS_EN = {interj:"interj.",adv:"adv.",copula:"copula",particle:"particle",pron:"pron.",n:"noun","n/v":"noun/verb",v:"verb",adj:"adj.",num:"num.",conj:"conj.",prep:"prep."};
+const CAT_ZH = {greeting:"问候",pronoun:"代词",nature:"自然",people:"人与物",abstract:"抽象",action:"动作",adj:"形容",num:"数词",func:"功能词"};
+const CAT_EN = {greeting:"greeting",pronoun:"pronoun",nature:"nature",people:"people & things",abstract:"abstract",action:"action",adj:"adjective",num:"number",func:"function"};
+
+/* =====================================================================
+   STATE
+   ===================================================================== */
+const STORAGE_KEY = "cofdtld_learner_v1";
+const BOX_DAYS = [0, 1, 2, 4, 7, 15]; // box 1..6 -> days until next review
+const DAY_MS = 86400000;
+
+let state = {
+  lang: (navigator.language || "zh").toLowerCase().startsWith("zh") ? "zh" : "en",
+  view: "dashboard",
+  progress: {},   // w -> {box, nextReview, correct, wrong, learnedAt}
+  dictFilter: "all",
+  dictQuery: ""
+};
+
+let session = null; // active learn/review/quiz session
+let flash = null;   // transient quiz feedback
+
+function t(key){
+  const parts = key.split(".");
+  let v = I18N[state.lang];
+  for(const p of parts){ if(v==null) return key; v = v[p]; }
+  return v ?? key;
+}
+function fmt(str, obj){
+  return str.replace(/\{(\w+)\}/g, (_,k)=> obj[k] ?? "");
+}
+function $(sel){ return document.querySelector(sel); }
+function esc(s){ return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+function save(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      lang: state.lang, progress: state.progress
+    }));
+  }catch(e){ /* ignore */ }
+}
+function load(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+    const d = JSON.parse(raw);
+    if(d.lang) state.lang = d.lang;
+    if(d.progress) state.progress = d.progress;
+  }catch(e){ /* ignore */ }
+}
+
+/* =====================================================================
+   HELPERS
+   ===================================================================== */
+function shuffle(a){
+  const r = a.slice();
+  for(let i=r.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [r[i],r[j]] = [r[j],r[i]];
+  }
+  return r;
+}
+function meaning(w, lang){
+  return (lang==="zh" ? w.zh : w.en).join(" / ");
+}
+function dueWords(){
+  const now = Date.now();
+  return WORDS.filter(w=>{
+    const p = state.progress[w.w];
+    return p && p.nextReview <= now;
+  });
+}
+function learnedWords(){
+  return WORDS.filter(w=> state.progress[w.w]);
+}
+function newWords(){
+  return WORDS.filter(w=> !state.progress[w.w]);
+}
+function boxOf(w){
+  const p = state.progress[w.w];
+  return p ? p.box : 0;
+}
+function recordAnswer(w, correct){
+  const p = state.progress[w.w] || {box:1, nextReview:Date.now(), correct:0, wrong:0, learnedAt:Date.now()};
+  if(correct){
+    p.box = Math.min(6, p.box + 1);
+    p.correct = (p.correct||0) + 1;
+  }else{
+    p.box = 1;
+    p.wrong = (p.wrong||0) + 1;
+  }
+  p.nextReview = Date.now() + BOX_DAYS[p.box-1] * DAY_MS;
+  state.progress[w.w] = p;
+  save();
+}
+function markLearned(w){
+  if(state.progress[w.w]) return;
+  state.progress[w.w] = {box:1, nextReview:Date.now(), correct:0, wrong:0, learnedAt:Date.now()};
+  save();
+}
+
+/* =====================================================================
+   NAV / VIEW
+   ===================================================================== */
+function setLang(l){
+  state.lang = l;
+  save();
+  render();
+}
+function setView(v){
+  state.view = v;
+  if(v!=="learn" && v!=="review" && v!=="quiz") session = null;
+  render();
+}
+function renderNav(){
+  const nav = $("#nav");
+  const items = [
+    ["dashboard","nav.dashboard"],
+    ["learn","nav.learn"],
+    ["review","nav.review"],
+    ["quiz","nav.quiz"],
+    ["dict","nav.dict"],
+    ["phrases","nav.phrases"]
+  ];
+  nav.innerHTML = items.map(([k,label])=>{
+    const due = k==="review" ? dueWords().length : 0;
+    const badge = due>0 ? ` <span style="color:var(--warn);font-weight:800">${due}</span>` : "";
+    return `<button class="${state.view===k?"active":""}" onclick="setView('${k}')">${t(label)}${badge}</button>`;
+  }).join("");
+}
+
+/* =====================================================================
+   DASHBOARD
+   ===================================================================== */
+function renderDashboard(){
+  const total = WORDS.length;
+  const learned = learnedWords().length;
+  const mastered = WORDS.filter(w=>boxOf(w)>=5).length;
+  const due = dueWords().length;
+  const pct = Math.round(learned/total*100);
+
+  let suggestion = "";
+  if(learned === 0){
+    suggestion = `<p class="sub" style="margin:0 0 14px">${esc(t("learnDesc"))}</p>
+      <button class="btn big" onclick="setView('learn')">${esc(t("startLearn"))}</button>`;
+  }else if(due > 0){
+    suggestion = `<p class="sub" style="margin:0 0 14px">${esc(fmt(t("dueCount"),{n:due}))}</p>
+      <button class="btn big" onclick="setView('review')">${esc(t("startReview"))}</button>`;
+  }else{
+    suggestion = `<p class="sub" style="margin:0 0 14px">${esc(t("noDue"))}</p>
+      <div class="btn-row">
+        <button class="btn" onclick="setView('learn')">${esc(t("startLearn"))}</button>
+        <button class="btn secondary" onclick="setView('quiz')">${esc(t("startQuiz"))}</button>
+      </div>`;
+  }
+
+  $("#view-dashboard").innerHTML = `
+    <h1>${esc(t("welcome"))}</h1>
+    <p class="sub">${esc(t("tagline"))}</p>
+    <div class="stats">
+      <div class="stat"><div class="num">${learned}</div><div class="lbl">${esc(t("learned"))} / ${total}</div></div>
+      <div class="stat"><div class="num">${mastered}</div><div class="lbl">${esc(t("mastered"))}</div></div>
+      <div class="stat"><div class="num" style="color:${due>0?'var(--warn)':'var(--muted)'}">${due}</div><div class="lbl">${esc(t("due"))}</div></div>
+      <div class="stat"><div class="num">${pct}%</div><div class="lbl">${esc(t("progressLabel"))}</div></div>
+    </div>
+    <div class="panel">
+      <h2>${esc(t("today"))}</h2>
+      ${suggestion}
+    </div>
+    <div class="panel" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+      <button class="btn secondary" onclick="setView('dict')">${esc(t("nav.dict"))}</button>
+      <button class="btn secondary" onclick="setView('phrases')">${esc(t("nav.phrases"))}</button>
+      <div class="spacer" style="flex:1"></div>
+      <button class="btn ghost" onclick="resetProgress()">${esc(t("reset"))}</button>
+    </div>
+  `;
+}
+function resetProgress(){
+  if(!confirm(t("resetConfirm"))) return;
+  state.progress = {};
+  session = null;
+  save();
+  render();
+}
+
+/* =====================================================================
+   LEARN
+   ===================================================================== */
+const LEARN_BATCH = 5;
+
+function startLearn(){
+  const pool = newWords();
+  if(pool.length === 0){ session = {mode:"learn", empty:true}; render(); return; }
+  // prefer core words first
+  const core = pool.filter(w=>w.core);
+  const rest = pool.filter(w=>!w.core);
+  const picked = [...shuffle(core), ...shuffle(rest)].slice(0, LEARN_BATCH);
+  session = {
+    mode:"learn",
+    queue: picked,
+    idx: 0,
+    flipped: false,
+    done: false
+  };
+  render();
+}
+function flipCard(){
+  if(!session || session.mode!=="learn" || session.done) return;
+  session.flipped = !session.flipped;
+  render();
+}
+function learnNext(){
+  if(!session) return;
+  const w = session.queue[session.idx];
+  markLearned(w);
+  session.idx++;
+  session.flipped = false;
+  if(session.idx >= session.queue.length){
+    session.done = true;
+  }
+  render();
+}
+
+function renderLearn(){
+  const el = $("#view-learn");
+  if(!session || session.mode!=="learn"){
+    el.innerHTML = `
+      <h1>${esc(t("learnTitle"))}</h1>
+      <p class="sub">${esc(t("learnDesc"))}</p>
+      <div class="panel">
+        <button class="btn big" onclick="startLearn()">${esc(t("startLearn"))}</button>
+      </div>`;
+    return;
+  }
+  if(session.empty){
+    el.innerHTML = `
+      <h1>${esc(t("learnTitle"))}</h1>
+      <div class="panel empty">${esc(t("noNew"))}</div>
+      <button class="btn secondary" onclick="setView('review')">${esc(t("startReview"))}</button>`;
+    return;
+  }
+  if(session.done){
+    el.innerHTML = `
+      <h1>${esc(t("learnDone"))}</h1>
+      <p class="sub">${esc(t("learnDoneDesc"))}</p>
+      <div class="panel">
+        <div class="btn-row">
+          <button class="btn" onclick="startLearn()">${esc(t("startNext"))}</button>
+          <button class="btn secondary" onclick="setView('dashboard')">${esc(t("backHome"))}</button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const w = session.queue[session.idx];
+  const total = session.queue.length;
+  const i = session.idx + 1;
+  const lang = state.lang;
+  const m = meaning(w, lang);
+  const pos = lang==="zh" ? (POS_ZH[w.pos]||w.pos) : (POS_EN[w.pos]||w.pos);
+  const cat = lang==="zh" ? (CAT_ZH[w.cat]||w.cat) : (CAT_EN[w.cat]||w.cat);
+  const ex = w.ex ? `<div class="ex">
+      <div class="c">${esc(w.ex.c)}</div>
+      <div>${esc(lang==="zh"?w.ex.z:w.ex.e)}</div>
+    </div>` : "";
+  const mn = lang==="zh" ? `<div class="mnem">谐音：${esc(w.mn)}</div>` : "";
+
+  el.innerHTML = `
+    <div class="q-head"><span>${esc(t("learnTitle"))}</span><span>${i} / ${total}</span></div>
+    <div class="pbar"><i style="width:${(i-1)/total*100}%"></i></div>
+    <div style="height:16px"></div>
+    <div class="card ${session.flipped?'flipped':''}" onclick="flipCard()">
+      <div class="card-inner">
+        <div class="card-face front">
+          <div class="word">${esc(w.w)}</div>
+          ${mn}
+          <div class="pos-tag">${esc(pos)} · ${esc(cat)}</div>
+          <div class="hint">${esc(t("flipHint"))}</div>
+        </div>
+        <div class="card-face back">
+          <div class="mean">${esc(m)}</div>
+          ${mn}
+          ${ex}
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn big" onclick="learnNext()">${i===total?esc(t("finish")):esc(t("next"))}</button>
+    </div>
+  `;
+}
+
+/* =====================================================================
+   REVIEW
+   ===================================================================== */
+const REVIEW_BATCH = 10;
+
+function startReview(){
+  const due = dueWords();
+  if(due.length === 0){ session = {mode:"review", empty:true}; render(); return; }
+  const picked = shuffle(due).slice(0, REVIEW_BATCH);
+  session = {
+    mode:"review",
+    queue: picked,
+    idx: 0,
+    answered: false,
+    chosen: null,
+    correctCount: 0,
+    wrongCount: 0,
+    question: null,
+    done: false
+  };
+  buildReviewQuestion();
+  render();
+}
+
+function buildReviewQuestion(){
+  if(!session || session.mode!=="review") return;
+  const w = session.queue[session.idx];
+  if(!w) return;
+  const lang = state.lang;
+  // half the time: Cofdtld -> meaning ; half: meaning -> Cofdtld
+  const dir = Math.random() < 0.5 ? "toMeaning" : "toWord";
+  let options;
+  if(dir === "toMeaning"){
+    options = makeOptions(w, x => meaning(x, lang));
+    session.question = {
+      dir,
+      prompt: w.w,
+      promptLabel: "",
+      options,
+      answerValue: meaning(w, lang)
+    };
+  }else{
+    options = makeOptions(w, x => x.w);
+    session.question = {
+      dir,
+      prompt: meaning(w, lang),
+      promptLabel: "",
+      options,
+      answerValue: w.w
+    };
+  }
+  session.answered = false;
+  session.chosen = null;
+}
+
+function makeOptions(correctWord, valueFn, n=4){
+  const others = WORDS.filter(x=>x.w !== correctWord.w);
+  const sameCat = others.filter(x=>x.cat === correctWord.cat);
+  const pool = sameCat.length >= n-1 ? sameCat : others;
+  const picked = shuffle(pool).slice(0, n-1);
+  const all = [correctWord, ...picked].map(x=>({w:x, val: valueFn(x)}));
+  return shuffle(all);
+}
+
+function answerReview(val){
+  if(!session || session.mode!=="review" || session.answered) return;
+  const q = session.question;
+  const w = session.queue[session.idx];
+  const ok = val === q.answerValue;
+  session.chosen = val;
+  session.answered = true;
+  if(ok){ session.correctCount++; } else { session.wrongCount++; }
+  recordAnswer(w, ok);
+  render();
+}
+function nextReview(){
+  if(!session || session.mode!=="review") return;
+  session.idx++;
+  if(session.idx >= session.queue.length){
+    session.done = true;
+  }else{
+    buildReviewQuestion();
+  }
+  render();
+}
+
+function renderReview(){
+  const el = $("#view-review");
+  if(!session || session.mode!=="review"){
+    const due = dueWords().length;
+    el.innerHTML = `
+      <h1>${esc(t("reviewTitle"))}</h1>
+      <p class="sub">${esc(t("reviewDesc"))}</p>
+      <div class="panel">
+        <p style="margin:0 0 14px;color:${due>0?'var(--warn)':'var(--muted)'};font-weight:700">
+          ${due>0 ? esc(fmt(t("dueCount"),{n:due})) : esc(t("noDueShort"))}
+        </p>
+        <button class="btn big" onclick="startReview()" ${due===0?'disabled style="opacity:.5;cursor:not-allowed"':''}>
+          ${esc(t("startReview"))}
+        </button>
+      </div>`;
+    return;
+  }
+  if(session.empty){
+    el.innerHTML = `
+      <h1>${esc(t("reviewTitle"))}</h1>
+      <div class="panel empty">${esc(t("noDue"))}</div>
+      <div class="btn-row">
+        <button class="btn" onclick="setView('learn')">${esc(t("startLearn"))}</button>
+        <button class="btn secondary" onclick="setView('quiz')">${esc(t("startQuiz"))}</button>
+      </div>`;
+    return;
+  }
+  if(session.done){
+    el.innerHTML = `
+      <h1>${esc(t("sessionDone"))}</h1>
+      <p class="sub">${esc(fmt(t("sessionStats"),{c:session.correctCount,w:session.wrongCount}))}</p>
+      <div class="panel">
+        <div class="btn-row">
+          <button class="btn" onclick="startReview()">${esc(t("startNext"))}</button>
+          <button class="btn secondary" onclick="setView('dashboard')">${esc(t("backHome"))}</button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const q = session.question;
+  const total = session.queue.length;
+  const i = session.idx + 1;
+  const lang = state.lang;
+  const promptLabel = q.dir === "toMeaning" ? t("questionWhat") : t("questionHow");
+
+  const optsHtml = q.options.map(o=>{
+    let cls = "option";
+    if(session.answered){
+      if(o.val === q.answerValue) cls += " correct";
+      else if(o.val === session.chosen) cls += " wrong";
+    }
+    return `<button class="${cls}" onclick="answerReview(${JSON.stringify(o.val).replace(/"/g,'&quot;')})"
+      ${session.answered?'disabled':''}>${esc(o.val)}</button>`;
+  }).join("");
+
+  let fb = "";
+  if(session.answered){
+    const ok = session.chosen === q.answerValue;
+    fb = `<div class="feedback show ${ok?'ok':'no'}">
+      ${ok ? esc(t("correct")) : esc(t("wrong")) + " " + esc(q.answerValue)}
+    </div>`;
+  }
+
+  el.innerHTML = `
+    <div class="q-head"><span>${esc(t("reviewTitle"))}</span><span>${esc(fmt(t("qProgress"),{i,n:total}))}</span></div>
+    <div class="pbar"><i style="width:${(i-1)/total*100}%"></i></div>
+    <div style="height:16px"></div>
+    <div class="q-prompt">
+      <span class="lbl">${esc(promptLabel)}</span>
+      ${esc(q.prompt)}
+    </div>
+    <div class="options">${optsHtml}</div>
+    ${fb}
+    ${session.answered ? `<div style="height:14px"></div>
+      <button class="btn big" onclick="nextReview()">${esc(t("continueBtn"))}</button>` : ""}
+  `;
+}
+
+/* =====================================================================
+   QUIZ
+   ===================================================================== */
+const QUIZ_BATCH = 10;
+
+function startQuiz(){
+  const pool = learnedWords();
+  const source = pool.length >= 4 ? pool : WORDS;
+  const picked = shuffle(source).slice(0, QUIZ_BATCH);
+  session = {
+    mode:"quiz",
+    queue: picked,
+    idx: 0,
+    answered: false,
+    chosen: null,
+    correctCount: 0,
+    wrongCount: 0,
+    question: null,
+    done: false
+  };
+  buildQuizQuestion();
+  render();
+}
+function buildQuizQuestion(){
+  if(!session || session.mode!=="quiz") return;
+  const w = session.queue[session.idx];
+  const lang = state.lang;
+  const dir = Math.random() < 0.5 ? "toMeaning" : "toWord";
+  if(dir === "toMeaning"){
+    session.question = {
+      dir,
+      prompt: w.w,
+      answerValue: meaning(w, lang),
+      options: makeOptions(w, x=>meaning(x, lang))
+    };
+  }else{
+    session.question = {
+      dir,
+      prompt: meaning(w, lang),
+      answerValue: w.w,
+      options: makeOptions(w, x=>x.w)
+    };
+  }
+  session.answered = false;
+  session.chosen = null;
+}
+function answerQuiz(val){
+  if(!session || session.mode!=="quiz" || session.answered) return;
+  const q = session.question;
+  const ok = val === q.answerValue;
+  session.chosen = val;
+  session.answered = true;
+  if(ok) session.correctCount++; else session.wrongCount++;
+  render();
+}
+function nextQuiz(){
+  if(!session || session.mode!=="quiz") return;
+  session.idx++;
+  if(session.idx >= session.queue.length) session.done = true;
+  else buildQuizQuestion();
+  render();
+}
+
+function renderQuiz(){
+  const el = $("#view-quiz");
+  if(!session || session.mode!=="quiz"){
+    el.innerHTML = `
+      <h1>${esc(t("quizTitle"))}</h1>
+      <p class="sub">${esc(t("quizDesc"))}</p>
+      <div class="panel">
+        <button class="btn big" onclick="startQuiz()">${esc(t("startQuiz"))}</button>
+      </div>`;
+    return;
+  }
+  if(session.done){
+    el.innerHTML = `
+      <h1>${esc(t("sessionDone"))}</h1>
+      <p class="sub">${esc(fmt(t("sessionStats"),{c:session.correctCount,w:session.wrongCount}))}</p>
+      <div class="panel">
+        <div class="btn-row">
+          <button class="btn" onclick="startQuiz()">${esc(t("startNext"))}</button>
+          <button class="btn secondary" onclick="setView('dashboard')">${esc(t("backHome"))}</button>
+        </div>
+      </div>`;
+    return;
+  }
+  const q = session.question;
+  const total = session.queue.length;
+  const i = session.idx + 1;
+  const promptLabel = q.dir === "toMeaning" ? t("questionWhat") : t("questionHow");
+  const optsHtml = q.options.map(o=>{
+    let cls = "option";
+    if(session.answered){
+      if(o.val === q.answerValue) cls += " correct";
+      else if(o.val === session.chosen) cls += " wrong";
+    }
+    return `<button class="${cls}" onclick="answerQuiz(${JSON.stringify(o.val).replace(/"/g,'&quot;')})"
+      ${session.answered?'disabled':''}>${esc(o.val)}</button>`;
+  }).join("");
+  let fb = "";
+  if(session.answered){
+    const ok = session.chosen === q.answerValue;
+    fb = `<div class="feedback show ${ok?'ok':'no'}">
+      ${ok ? esc(t("correct")) : esc(t("wrong")) + " " + esc(q.answerValue)}
+    </div>`;
+  }
+  el.innerHTML = `
+    <div class="q-head"><span>${esc(t("quizTitle"))}</span><span>${esc(fmt(t("qProgress"),{i,n:total}))}</span></div>
+    <div class="pbar"><i style="width:${(i-1)/total*100}%"></i></div>
+    <div style="height:16px"></div>
+    <div class="q-prompt"><span class="lbl">${esc(promptLabel)}</span>${esc(q.prompt)}</div>
+    <div class="options">${optsHtml}</div>
+    ${fb}
+    ${session.answered ? `<div style="height:14px"></div>
+      <button class="btn big" onclick="nextQuiz()">${esc(t("continueBtn"))}</button>` : ""}
+  `;
+}
+
+/* =====================================================================
+   DICTIONARY
+   ===================================================================== */
+function setDictFilter(f){ state.dictFilter = f; renderDict(); }
+function setDictQuery(q){ state.dictQuery = q; renderDict(); }
+
+function renderDict(){
+  const el = $("#view-dict");
+  const lang = state.lang;
+  const filters = [
+    ["all", t("all")],
+    ["core", t("core")],
+    ["func", t("func")],
+    ["greeting","greeting"],
+    ["pronoun","pronoun"],
+    ["nature","nature"],
+    ["people","people"],
+    ["abstract","abstract"],
+    ["action","action"],
+    ["adj","adj"],
+    ["num","num"]
+  ];
+  let list = WORDS.slice();
+  if(state.dictFilter === "core") list = list.filter(w=>w.core);
+  else if(state.dictFilter === "func") list = list.filter(w=>!w.core || w.cat==="func");
+  else if(state.dictFilter !== "all") list = list.filter(w=>w.cat === state.dictFilter);
+
+  const q = state.dictQuery.trim().toLowerCase();
+  if(q){
+    list = list.filter(w=>
+      w.w.toLowerCase().includes(q) ||
+      w.en.some(e=>e.toLowerCase().includes(q)) ||
+      w.zh.some(z=>z.includes(q))
+    );
+  }
+
+  const chips = filters.map(([k,label])=>
+    `<button class="chip ${state.dictFilter===k?'active':''}" onclick="setDictFilter('${k}')">${esc(label)}</button>`
+  ).join("");
+
+  const items = list.map(w=>{
+    const pos = lang==="zh" ? (POS_ZH[w.pos]||w.pos) : (POS_EN[w.pos]||w.pos);
+    const cat = lang==="zh" ? (CAT_ZH[w.cat]||w.cat) : (CAT_EN[w.cat]||w.cat);
+    const mn = lang==="zh" ? `<span class="meta">谐音：${esc(w.mn)}</span>` : "";
+    return `<div class="dict-item">
+      <div class="w">${esc(w.w)}</div>
+      <div class="m">${esc(meaning(w,lang))}</div>
+      <div class="meta">${esc(pos)} · ${esc(cat)} ${w.core?'· ★':''}</div>
+      ${mn}
+    </div>`;
+  }).join("");
+
+  el.innerHTML = `
+    <h1>${esc(t("dictTitle"))}</h1>
+    <p class="sub">${esc(t("dictDesc"))}</p>
+    <input class="search" placeholder="${esc(t("searchPlaceholder"))}"
+      value="${esc(state.dictQuery)}"
+      oninput="setDictQuery(this.value)">
+    <div class="chips">${chips}</div>
+    <div class="dict-list">
+      ${items || `<div class="empty">${esc(t("noResult"))}</div>`}
+    </div>
+  `;
+}
+
+/* =====================================================================
+   PHRASES
+   ===================================================================== */
+function renderPhrases(){
+  const el = $("#view-phrases");
+  const lang = state.lang;
+  const items = PHRASES.map(p=>`
+    <div class="phrase">
+      <div class="c">${esc(p.c)}</div>
+      <div class="t">${esc(lang==="zh"?p.z:p.e)}</div>
+      ${lang==="zh" ? `<div class="e">${esc(p.e)}</div>` : `<div class="e">${esc(p.z)}</div>`}
+    </div>`).join("");
+  el.innerHTML = `
+    <h1>${esc(t("phrasesTitle"))}</h1>
+    <p class="sub">${esc(t("phrasesDesc"))}</p>
+    ${items}
+  `;
+}
+
+/* =====================================================================
+   RENDER
+   ===================================================================== */
+function render(){
+  document.documentElement.lang = state.lang==="zh" ? "zh-CN" : "en";
+  document.getElementById("lang-zh").classList.toggle("active", state.lang==="zh");
+  document.getElementById("lang-en").classList.toggle("active", state.lang==="en");
+  renderNav();
+
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  const viewEl = document.getElementById("view-"+state.view);
+  if(viewEl) viewEl.classList.add("active");
+
+  if(state.view==="dashboard") renderDashboard();
+  else if(state.view==="learn") renderLearn();
+  else if(state.view==="review") renderReview();
+  else if(state.view==="quiz") renderQuiz();
+  else if(state.view==="dict") renderDict();
+  else if(state.view==="phrases") renderPhrases();
+}
+
+/* =====================================================================
+   BOOT
+   ===================================================================== */
+load();
+render();
+</script>
+</body>
+</html>
