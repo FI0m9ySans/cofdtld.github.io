@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cofdtld 语 · 词汇表 Lexicon</title>
+<style>
+  :root{
+    --bg:#0a0d16;
+    --line:rgba(255,255,255,.09);
+    --accent:#7ee0c8;
+    --accent2:#8ab4ff;
+    --text:#e6ecf5;
+    --muted:#8b9bb4;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    padding:34px 20px 70px;
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+    color:var(--text);
+    background:
+      radial-gradient(1100px 560px at 15% -12%, #1b2a4a 0%, transparent 62%),
+      radial-gradient(900px 520px at 92% -6%, #2a1b3d 0%, transparent 58%),
+      var(--bg);
+    background-attachment:fixed;
+    min-height:100%;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{ max-width:1180px; margin:0 auto; }
+
+  /* ---------- 头部 ---------- */
+  header{ margin-bottom:6px; }
+  h1{
+    font-size:clamp(1.9rem, 4.5vw, 2.9rem);
+    margin:0 0 8px;
+    letter-spacing:.03em;
+    font-weight:700;
+    background:linear-gradient(92deg,#7ee0c8 0%,#8ab4ff 55%,#c39bff 100%);
+    -webkit-background-clip:text; background-clip:text;
+    color:transparent;
+  }
+  h1 small{
+    font-size:.42em;
+    -webkit-text-fill-color:var(--muted);
+    color:var(--muted);
+    font-weight:400;
+    letter-spacing:.16em;
+    margin-left:10px;
+    vertical-align:middle;
+  }
+  .sub{
+    margin:0;
+    color:var(--muted);
+    font-size:.9rem;
+    letter-spacing:.02em;
+  }
+  .rule{
+    margin-top:14px;
+    font-size:.79rem;
+    color:#7a8aa3;
+    line-height:1.7;
+    padding:10px 14px;
+    border-left:2px solid rgba(126,224,200,.4);
+    background:rgba(255,255,255,.025);
+    border-radius:0 8px 8px 0;
+  }
+
+  /* ---------- 工具栏 ---------- */
+  .toolbar{
+    display:flex; flex-wrap:wrap; gap:12px; align-items:center;
+    margin:24px 0 16px;
+  }
+  input[type=search]{
+    flex:1 1 280px; min-width:200px;
+    background:rgba(255,255,255,.05);
+    border:1px solid var(--line);
+    color:var(--text);
+    padding:12px 15px;
+    border-radius:11px;
+    font-size:.95rem;
+    font-family:inherit;
+    outline:none;
+    transition:.2s;
+  }
+  input[type=search]::placeholder{ color:#5d6b81; }
+  input[type=search]:focus{
+    border-color:rgba(126,224,200,.6);
+    box-shadow:0 0 0 3px rgba(126,224,200,.11);
+    background:rgba(255,255,255,.07);
+  }
+  .count{
+    color:var(--muted);
+    font-size:.8rem;
+    white-space:nowrap;
+    letter-spacing:.04em;
+  }
+
+  /* ---------- 分类 ---------- */
+  .cats{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px; }
+  .cat{
+    background:rgba(255,255,255,.04);
+    border:1px solid var(--line);
+    color:var(--muted);
+    padding:6px 14px;
+    border-radius:999px;
+    font-size:.82rem;
+    font-family:inherit;
+    cursor:pointer;
+    transition:.18s;
+  }
+  .cat:hover{ color:var(--text); border-color:rgba(255,255,255,.22); }
+  .cat.active{
+    background:rgba(126,224,200,.14);
+    border-color:rgba(126,224,200,.55);
+    color:var(--accent);
+  }
+
+  /* ---------- 卡片网格 ---------- */
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(244px, 1fr));
+    gap:13px;
+  }
+  .card{
+    position:relative;
+    background:linear-gradient(160deg, rgba(255,255,255,.055), rgba(255,255,255,.018));
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:14px 16px 16px;
+    transition:transform .22s ease, border-color .22s ease, box-shadow .22s ease;
+  }
+  .card.has-ex{ cursor:pointer; }
+  .card:hover{
+    transform:translateY(-3px);
+    border-color:rgba(126,224,200,.42);
+    box-shadow:0 12px 26px rgba(0,0,0,.38);
+  }
+  .card.open{ border-color:rgba(126,224,200,.55); }
+
+  .top{ display:flex; align-items:center; gap:8px; }
+  .word{
+    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, "Courier New", monospace;
+    font-size:1.24rem;
+    font-weight:600;
+    color:var(--accent);
+    letter-spacing:.015em;
+    margin-right:auto;
+    word-break:break-word;
+  }
+  .pos{
+    font-size:.66rem;
+    color:var(--muted);
+    border:1px solid var(--line);
+    padding:2px 7px;
+    border-radius:6px;
+    white-space:nowrap;
+    flex:none;
+  }
+  .caret{
+    font-size:.7rem;
+    color:#5d6b81;
+    transition:transform .22s ease;
+    flex:none;
+  }
+  .card.open .caret{ transform:rotate(180deg); color:var(--accent); }
+
+  .zh{ margin-top:11px; font-size:1rem; line-height:1.45; }
+  .en{
+    font-size:.83rem;
+    color:var(--muted);
+    font-style:italic;
+    margin-top:3px;
+    line-height:1.45;
+  }
+
+  .ex{
+    display:none;
+    margin-top:12px;
+    padding-top:11px;
+    border-top:1px dashed rgba(255,255,255,.13);
+    font-size:.82rem;
+    line-height:1.65;
+  }
+  .card.open .ex{ display:block; animation:fade .22s ease; }
+  .ex .lang{
+    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color:var(--accent2);
+    font-size:.86rem;
+    margin-bottom:2px;
+  }
+  @keyframes fade{ from{ opacity:0; transform:translateY(-4px);} to{ opacity:1; transform:none;} }
+
+  .empty{
+    grid-column:1/-1;
+    text-align:center;
+    padding:60px 20px;
+    color:var(--muted);
+    font-size:.9rem;
+    line-height:2;
+    border:1px dashed var(--line);
+    border-radius:14px;
+  }
+
+  footer{
+    margin-top:44px;
+    text-align:center;
+    color:#4d5a6e;
+    font-size:.76rem;
+    letter-spacing:.05em;
+    line-height:1.9;
+  }
+  footer b{ color:#6d7d95; font-weight:500; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Cofdtld<small>CONLANG</small></h1>
+    <p class="sub">自建语言词汇表 · Lexicon of a constructed language</p>
+    <div class="rule">
+      拼读规则：每个字母都发音，<b>d / t / k</b> 为清音，<b>v / z</b> 为浊音；字母组合 <b>dt</b> 读作轻微的塞擦音。
+      重音一般落在倒数第二个音节上；单词末尾的 <b>-d / -t / -ld</b> 表示「事物/状态」，<b>-k</b> 结尾多为动作词。
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <input type="search" id="search" placeholder="搜索词形 / 中文释义 / English… 例如 cofdtld、你好、hello">
+    <span class="count" id="count"></span>
+  </div>
+
+  <div class="cats" id="cats"></div>
+
+  <div class="grid" id="grid"></div>
+
+  <footer>
+    <b>Cofdtld</b> — 一门被发明出来的语言 · 点击带 ▾ 的卡片可查看例句<br>
+    共 <b id="total"></b> 个词条
+  </footer>
+
+</div>
+
+<script>
+/* =========================================================
+   词库数据
+   w  = 词形
+   pos = 词性
+   cat = 分类
+   zh = 中文释义
+   en = 英文释义
+   ex = [例句, 中文翻译, English translation]（可选）
+   ========================================================= */
+const LEXICON = [
+
+  /* ---------- 问候 Greetings ---------- */
+  { w:"cofdtld", pos:"感叹词", cat:"问候", zh:"你好；问候", en:"hello; greeting",
+    ex:["Cofdtld, drenth!","你好，朋友！","Hello, friend!"] },
+  { w:"vren",    pos:"感叹词", cat:"问候", zh:"再见", en:"goodbye",
+    ex:["Vren, osk vronk!","再见，我们会再来的！","Goodbye, we will come again!"] },
+  { w:"thalm",   pos:"感叹词", cat:"问候", zh:"谢谢；感谢", en:"thank you",
+    ex:["Thalm, ta pravt.","谢谢，你真好。","Thank you, you are kind."] },
+  { w:"skorv",   pos:"副词",   cat:"问候", zh:"请；劳驾", en:"please" },
+  { w:"nu",      pos:"助词",   cat:"问候", zh:"是；对；确实", en:"yes; indeed" },
+  { w:"dro",     pos:"助词",   cat:"问候", zh:"不；不是；没", en:"no; not" },
+
+  /* ---------- 代词 Pronouns ---------- */
+  { w:"kem",  pos:"代词", cat:"代词", zh:"我；我的", en:"I; me; my" },
+  { w:"ta",   pos:"代词", cat:"代词", zh:"你；你的", en:"you; your",
+    ex:["Mirk ta?","你叫什么名字？","What is your name?"] },
+  { w:"vor",  pos:"代词", cat:"代词", zh:"他；他的", en:"he; him; his" },
+  { w:"lind", pos:"代词", cat:"代词", zh:"她；她的", en:"she; her; hers" },
+  { w:"osk",  pos:"代词", cat:"代词", zh:"我们；咱们", en:"we; us" },
+  { w:"zhal", pos:"代词", cat:"代词", zh:"他们；她们", en:"they; them",
+    ex:["Zhal vronk.","他们来了。","They are coming."] },
+  { w:"sek",  pos:"代词", cat:"代词", zh:"它；它的", en:"it; its" },
+
+  /* ---------- 自然 Nature ---------- */
+  { w:"plav",  pos:"名词", cat:"自然", zh:"水", en:"water",
+    ex:["Kem flent plav.","我喝水。","I drink water."] },
+  { w:"krost", pos:"名词", cat:"自然", zh:"火；火焰", en:"fire; flame" },
+  { w:"neld",  pos:"名词", cat:"自然", zh:"土地；大地", en:"earth; land" },
+  { w:"zhurn", pos:"名词", cat:"自然", zh:"天空", en:"sky" },
+  { w:"vask",  pos:"名词", cat:"自然", zh:"太阳", en:"sun",
+    ex:["Vask kvarn.","太阳是热的。","The sun is hot."] },
+  { w:"lurn",  pos:"名词", cat:"自然", zh:"月亮", en:"moon" },
+  { w:"sterv", pos:"名词", cat:"自然", zh:"星星", en:"star" },
+  { w:"bradn", pos:"名词", cat:"自然", zh:"树", en:"tree" },
+  { w:"klem",  pos:"名词", cat:"自然", zh:"花", en:"flower" },
+  { w:"groth", pos:"名词", cat:"自然", zh:"山；山脉", en:"mountain" },
+  { w:"flund", pos:"名词", cat:"自然", zh:"河；河流", en:"river" },
+  { w:"morv",  pos:"名词", cat:"自然", zh:"海；海洋", en:"sea; ocean" },
+  { w:"zolm",  pos:"名词", cat:"自然", zh:"光；光亮", en:"light" },
+  { w:"dusk",  pos:"名词", cat:"自然", zh:"黑暗；夜色", en:"darkness" },
+
+  /* ---------- 人与物 People & Things ---------- */
+  { w:"mirk",   pos:"名词", cat:"人与物", zh:"名字；名称", en:"name" },
+  { w:"drenth", pos:"名词", cat:"人与物", zh:"朋友", en:"friend",
+    ex:["Ta drenth kem.","你是我的朋友。","You are my friend."] },
+  { w:"kav",    pos:"名词", cat:"人与物", zh:"家；居所", en:"home",
+    ex:["Osk tsald kav.","我们回家。","We go home."] },
+  { w:"brent",  pos:"名词", cat:"人与物", zh:"城市", en:"city",
+    ex:["Kem tsald brent.","我去城市。","I go to the city."] },
+  { w:"tresh",  pos:"名词", cat:"人与物", zh:"路；道路", en:"road; path" },
+  { w:"kalf",   pos:"名词", cat:"人与物", zh:"书；书本", en:"book" },
+  { w:"nurg",   pos:"名词", cat:"人与物", zh:"词；词语", en:"word",
+    ex:["Nurg 'cofdtld' pravt.","“cofdtld”这个词很好。","The word “cofdtld” is good."] },
+  { w:"plost",  pos:"名词", cat:"人与物", zh:"声音；嗓音", en:"sound; voice" },
+  { w:"drask",  pos:"名词", cat:"人与物", zh:"歌；歌曲", en:"song" },
+  { w:"tesk",   pos:"名词", cat:"人与物", zh:"故事；传说", en:"story; tale" },
+
+  /* ---------- 抽象 Abstract ---------- */
+  { w:"harn",  pos:"名词", cat:"抽象", zh:"心；内心", en:"heart" },
+  { w:"vlest", pos:"名词", cat:"抽象", zh:"爱；爱情", en:"love",
+    ex:["Kem vlest ta.","我爱你。","I love you."] },
+  { w:"sparn", pos:"名词", cat:"抽象", zh:"希望", en:"hope" },
+  { w:"grald", pos:"名词", cat:"抽象", zh:"恐惧；害怕", en:"fear" },
+  { w:"tarn",  pos:"名词", cat:"抽象", zh:"时间", en:"time" },
+  { w:"slom",  pos:"名词", cat:"抽象", zh:"梦；梦境", en:"dream",
+    ex:["Kem vund slom.","我做梦了。（直译：我看见了一个梦）","I dreamed. (lit. I saw a dream)"] },
+  { w:"kriv",  pos:"名词", cat:"抽象", zh:"生命；生活", en:"life" },
+  { w:"mordt", pos:"名词", cat:"抽象", zh:"死；死亡", en:"death" },
+  { w:"velt",  pos:"名词", cat:"抽象", zh:"世界", en:"world" },
+
+  /* ---------- 动作 Verbs ---------- */
+  { w:"brolk", pos:"动词", cat:"动作", zh:"吃；进食", en:"to eat" },
+  { w:"flent", pos:"动词", cat:"动作", zh:"喝；饮用", en:"to drink" },
+  { w:"zark",  pos:"动词", cat:"动作", zh:"走；行走", en:"to walk" },
+  { w:"plim",  pos:"动词", cat:"动作", zh:"跑；奔跑", en:"to run" },
+  { w:"vund",  pos:"动词", cat:"动作", zh:"看；看见", en:"to see" },
+  { w:"hrask", pos:"动词", cat:"动作", zh:"听；听见", en:"to hear" },
+  { w:"klemd", pos:"动词", cat:"动作", zh:"说；讲话", en:"to speak; to say" },
+  { w:"nirth", pos:"动词", cat:"动作", zh:"想；思考", en:"to think" },
+  { w:"drost", pos:"动词", cat:"动作", zh:"知道；懂得", en:"to know" },
+  { w:"grelt", pos:"动词", cat:"动作", zh:"给；赠予", en:"to give" },
+  { w:"slav",  pos:"动词", cat:"动作", zh:"拿；取", en:"to take" },
+  { w:"vronk", pos:"动词", cat:"动作", zh:"来；到来", en:"to come" },
+  { w:"tsald", pos:"动词", cat:"动作", zh:"去；前往", en:"to go" },
+  { w:"mirv",  pos:"动词", cat:"动作", zh:"睡；睡觉", en:"to sleep" },
+
+  /* ---------- 形容 Adjectives ---------- */
+  { w:"kland", pos:"形容词", cat:"形容", zh:"大的；巨大的", en:"big; large" },
+  { w:"zif",   pos:"形容词", cat:"形容", zh:"小的；微小的", en:"small; little" },
+  { w:"pravt", pos:"形容词", cat:"形容", zh:"好的；美好的", en:"good; fine" },
+  { w:"nusk",  pos:"形容词", cat:"形容", zh:"坏的；糟糕的", en:"bad" },
+  { w:"tharn", pos:"形容词", cat:"形容", zh:"新的", en:"new" },
+  { w:"gold",  pos:"形容词", cat:"形容", zh:"老的；旧的", en:"old" },
+  { w:"vlim",  pos:"形容词", cat:"形容", zh:"快的；迅速的", en:"fast; quick" },
+  { w:"slord", pos:"形容词", cat:"形容", zh:"慢的；缓慢的", en:"slow" },
+  { w:"kvarn", pos:"形容词", cat:"形容", zh:"热的；温暖的", en:"hot; warm" },
+  { w:"frild", pos:"形容词", cat:"形容", zh:"冷的；寒冷的", en:"cold",
+    ex:["Plav frild.","水是冷的。","The water is cold."] },
+
+  /* ---------- 数词 Numbers ---------- */
+  { w:"drovn", pos:"数词", cat:"数词", zh:"一（1）", en:"one (1)" },
+  { w:"tsek",  pos:"数词", cat:"数词", zh:"二（2）", en:"two (2)" },
+  { w:"plorn", pos:"数词", cat:"数词", zh:"三（3）", en:"three (3)" },
+  { w:"kvar",  pos:"数词", cat:"数词", zh:"四（4）", en:"four (4)" },
+  { w:"feln",  pos:"数词", cat:"数词", zh:"五（5）", en:"five (5)" }
+];
+
+/* =========================================================
+   渲染逻辑
+   ========================================================= */
+const CATS = ["全部","问候","代词","自然","人与物","抽象","动作","形容","数词"];
+
+const gridEl   = document.getElementById("grid");
+const countEl  = document.getElementById("count");
+const catsEl   = document.getElementById("cats");
+const searchEl = document.getElementById("search");
+
+document.getElementById("total").textContent = LEXICON.length;
+
+const state = { q: "", cat: "全部" };
+
+/* 生成分类按钮 */
+CATS.forEach(c => {
+  const btn = document.createElement("button");
+  btn.className = "cat" + (c === "全部" ? " active" : "");
+  btn.textContent = c;
+  btn.addEventListener("click", () => {
+    state.cat = c;
+    [...catsEl.children].forEach(x => x.classList.toggle("active", x === btn));
+    render();
+  });
+  catsEl.appendChild(btn);
+});
+
+/* 主渲染函数 */
+function render() {
+  const raw = state.q.trim();
+  const q   = raw.toLowerCase();
+
+  const list = LEXICON.filter(d => {
+    if (state.cat !== "全部" && d.cat !== state.cat) return false;
+    if (!q) return true;
+    return d.w.toLowerCase().includes(q)
+        || d.zh.includes(raw)
+        || d.en.toLowerCase().includes(q);
+  });
+
+  countEl.textContent = `显示 ${list.length} / ${LEXICON.length} 个词条`;
+
+  if (!list.length) {
+    gridEl.innerHTML = `<div class="empty">没有找到匹配的词条<br>No matching entries found</div>`;
+    return;
+  }
+
+  gridEl.innerHTML = list.map(d => `
+    <article class="card${d.ex ? " has-ex" : ""}">
+      <div class="top">
+        <span class="word">${d.w}</span>
+        <span class="pos">${d.pos}</span>
+        ${d.ex ? `<span class="caret">▾</span>` : ""}
+      </div>
+      <div class="zh">${d.zh}</div>
+      <div class="en">${d.en}</div>
+      ${d.ex ? `
+        <div class="ex">
+          <div class="lang">${d.ex[0]}</div>
+          <div>${d.ex[1]}</div>
+          <div class="en">${d.ex[2]}</div>
+        </div>` : ""}
+    </article>
+  `).join("");
+}
+
+/* 点击展开例句 */
+gridEl.addEventListener("click", e => {
+  const card = e.target.closest(".card.has-ex");
+  if (card) card.classList.toggle("open");
+});
+
+/* 搜索 */
+searchEl.addEventListener("input", e => {
+  state.q = e.target.value;
+  render();
+});
+
+/* 初始化 */
+render();
+</script>
+</body>
+</html>
