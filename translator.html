@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cofdtld Translator · English ⇄ Cofdtld</title>
+<title>Cofdtld Translator · Bidirectional</title>
 <style>
   :root{
     --bg:#0a0d16; --line:rgba(255,255,255,.09);
@@ -31,8 +31,27 @@
   .back{ display:inline-block; margin-top:10px; color:var(--accent2); font-size:.8rem; text-decoration:none; }
   .back:hover{ text-decoration:underline; }
 
+  .mode-tabs{
+    margin-top:22px; display:flex; gap:4px;
+    background:rgba(255,255,255,.04);
+    border:1px solid var(--line); border-radius:12px; padding:4px;
+  }
+  .mode-tabs button{
+    flex:1; padding:9px 10px; border-radius:9px;
+    background:transparent; border:none; color:var(--muted);
+    font-family:inherit; font-size:.8rem; cursor:pointer; transition:.16s;
+    white-space:nowrap;
+  }
+  .mode-tabs button:hover{ color:var(--text); }
+  .mode-tabs button.active{
+    background:var(--accent); color:#0a0d16; font-weight:700;
+  }
+  @media (max-width:560px){
+    .mode-tabs{ flex-direction:column; }
+  }
+
   .panel{
-    margin-top:22px; background:rgba(255,255,255,.035);
+    margin-top:14px; background:rgba(255,255,255,.035);
     border:1px solid var(--line); border-radius:16px; padding:20px;
   }
   textarea{
@@ -72,6 +91,7 @@
   .gloss span{ margin-right:14px; white-space:nowrap; }
   .gloss b{ color:var(--text); font-weight:600; }
   .gloss .g-unk{ color:var(--warn); }
+  .gloss .alt{ color:#5d6b81; }
 
   .hint{ margin-top:12px; font-size:.78rem; color:#6d7d95; line-height:1.7; }
   .hint code{ color:var(--accent2); font-family:ui-monospace,monospace; }
@@ -111,9 +131,16 @@
   <h1>Cofdtld Translator</h1>
   <p class="sub">
     A rule-based dictionary translator for the Cofdtld conlang.<br>
-    Type English or Chinese — it outputs Cofdtld words, with a word-by-word gloss below.
+    Translate English or Chinese into Cofdtld — or decode Cofdtld back into English / Chinese.
   </p>
   <a class="back" href="./">← back to the lexicon</a>
+
+  <!-- 方向切换 -->
+  <div class="mode-tabs" id="modeTabs">
+    <button data-mode="to-cof" class="active">English / 中文 → Cofdtld</button>
+    <button data-mode="to-en">Cofdtld → English</button>
+    <button data-mode="to-zh">Cofdtld → 中文</button>
+  </div>
 
   <div class="panel">
     <textarea id="input" placeholder="e.g. I love you   /   Hello, friend!   /   我爱你"></textarea>
@@ -125,7 +152,7 @@
     <div class="examples" id="examples"></div>
 
     <div class="result" id="result">
-      <div class="out-label">Cofdtld</div>
+      <div class="out-label" id="outLabel">Cofdtld</div>
       <div class="out" id="out"></div>
       <div class="gloss" id="gloss"></div>
     </div>
@@ -138,15 +165,14 @@
   </div>
 
   <footer>
-    Core lexicon: 75 words · translator adds 23 function words marked <span style="color:#8ab4ff">func</span><br>
-    This is a dictionary-based translator, not full machine translation. Unknown words are marked in yellow.
+    Core lexicon + function words · this is a dictionary-based translator, not full machine translation.<br>
+    Unknown words are marked in yellow. Reverse mode outputs the first gloss for each Cofdtld word.
   </footer>
 </div>
 
 <script>
 /* ============================================================
-   词库：核心 75 词 + 23 个翻译功能词
-   core:false 表示翻译器扩展词，页面上会标注
+   词库数据
    ============================================================ */
 const ENTRIES = [
   {cof:"cofdtld",en:["hello","hi"],zh:["你好"],pos:"interj",cat:"greeting",core:true},
@@ -255,31 +281,30 @@ const ENTRIES = [
   {cof:"kv",en:["what"],zh:["什么"],pos:"n",cat:"abstract",core:true},
 ];
 
-/* ---------- 构建索引 ---------- */
+/* ---------- 索引 ---------- */
 const EN = new Map(), ZH = new Map(), COF = new Map();
 ENTRIES.forEach(e=>{
-  COF.set(e.cof,e);
-  e.en.forEach(w=>EN.set(w.toLowerCase(),e.cof));
-  e.zh.forEach(w=>ZH.set(w,e.cof));
+  COF.set(e.cof.toLowerCase(), e);
+  e.en.forEach(w=>EN.set(w.toLowerCase(), e.cof));
+  e.zh.forEach(w=>ZH.set(w, e.cof));
 });
 
 const NUM_MAP = {"1":"drovn","2":"tsek","3":"plorn","4":"kvar","5":"feln",
                  "6":"seks","7":"sept","8":"okt","9":"non","10":"dekn"};
 
 /* ============================================================
-   翻译核心
+   正向：English / 中文 → Cofdtld
    ============================================================ */
 function isChinese(s){ return /[\u4e00-\u9fa5]/.test(s); }
 
-/* --- 英文逐词解析 --- */
 function resolveEnglish(raw){
   const w = raw.toLowerCase();
   if (["the","a","an"].includes(w)) return {skip:true};
   let cof = EN.get(w);
-  if (!cof && w.endsWith("s"))  cof = EN.get(w.slice(0,-1));
-  if (!cof && w.endsWith("es")) cof = EN.get(w.slice(0,-2));
-  if (!cof && w.endsWith("ed")) cof = EN.get(w.slice(0,-2));
-  if (!cof && w.endsWith("ing"))cof = EN.get(w.slice(0,-3));
+  if (!cof && w.endsWith("s"))   cof = EN.get(w.slice(0,-1));
+  if (!cof && w.endsWith("es"))  cof = EN.get(w.slice(0,-2));
+  if (!cof && w.endsWith("ed"))  cof = EN.get(w.slice(0,-2));
+  if (!cof && w.endsWith("ing")) cof = EN.get(w.slice(0,-3));
   return cof ? {cof} : {cof:null};
 }
 
@@ -309,7 +334,6 @@ function translateEnglish(text){
   return {output: out.trim(), glosses};
 }
 
-/* --- 中文最大匹配分词 --- */
 function segmentChinese(text){
   const tokens = [];
   let i = 0;
@@ -346,73 +370,180 @@ function translateChinese(text){
 }
 
 /* ============================================================
-   UI
+   反向：Cofdtld → English / 中文
    ============================================================ */
-const inputEl = document.getElementById("input");
-const langtag = document.getElementById("langtag");
+function translateCofdtld(text, targetLang){
+  const tokens = text.match(/[a-zA-Z']+|[.,!?;:]|\s+/g) || [];
+  let out = "";
+  const glosses = [];
+
+  tokens.forEach(tok=>{
+    if (/^\s+$/.test(tok)){ out += " "; return; }
+    if (/^[.,!?;:]$/.test(tok)){ out = out.replace(/\s+$/,"") + tok; return; }
+
+    const entry = COF.get(tok.toLowerCase());
+    if (entry){
+      const list = targetLang === "zh" ? entry.zh : entry.en;
+      const primary = list[0];
+      const alts = list.slice(1);
+      out += (out?" ":"") + primary;
+      glosses.push({cof: primary, orig: tok, alts, unk: false});
+    } else {
+      out += (out?" ":"") + `[?${tok}]`;
+      glosses.push({cof: `[?${tok}]`, orig: tok, alts: [], unk: true});
+    }
+  });
+
+  let result = out.trim();
+  if (targetLang === "en" && result){
+    result = result.charAt(0).toUpperCase() + result.slice(1);
+  }
+  return {output: result, glosses};
+}
+
+/* ============================================================
+   UI 状态
+   ============================================================ */
+const modeTabs = document.getElementById("modeTabs");
+const inputEl  = document.getElementById("input");
+const langtag  = document.getElementById("langtag");
 const resultEl = document.getElementById("result");
-const outEl = document.getElementById("out");
-const glossEl = document.getElementById("gloss");
+const outEl    = document.getElementById("out");
+const outLabel = document.getElementById("outLabel");
+const glossEl  = document.getElementById("gloss");
+const exWrap   = document.getElementById("examples");
+
+let mode = "to-cof"; // to-cof | to-en | to-zh
+
+/* ---------- 例句 ---------- */
+const EXAMPLES = {
+  "to-cof": [
+    "I love you",
+    "Hello, friend!",
+    "We drink water",
+    "They come with a friend",
+    "我爱你",
+    "你好，朋友！",
+    "我们喝水",
+    "他想要一本书"
+  ],
+  "to-en": [
+    "cofdtld, drenth!",
+    "kem vlest ta.",
+    "osk flent plav.",
+    "zhal vronk vid drenth.",
+    "ta nu drenth kem."
+  ],
+  "to-zh": [
+    "cofdtld, drenth!",
+    "kem vlest ta.",
+    "osk flent plav.",
+    "zhal vronk vid drenth.",
+    "ta nu drenth kem."
+  ]
+};
+
+function renderExamples(){
+  exWrap.innerHTML = "";
+  EXAMPLES[mode].forEach(s=>{
+    const b = document.createElement("button");
+    b.textContent = s;
+    b.addEventListener("click", ()=>{
+      inputEl.value = s;
+      updateLangTag();
+      runTranslate();
+    });
+    exWrap.appendChild(b);
+  });
+}
+
+/* ---------- placeholder & 标签 ---------- */
+function updateLabels(){
+  if (mode === "to-cof"){
+    inputEl.placeholder = "e.g. I love you   /   Hello, friend!   /   我爱你";
+    outLabel.textContent = "Cofdtld";
+    langtag.innerHTML = "detected: <b>—</b>";
+  } else if (mode === "to-en"){
+    inputEl.placeholder = "e.g. cofdtld, drenth!   /   kem vlest ta.";
+    outLabel.textContent = "English";
+    langtag.innerHTML = "input: <b>Cofdtld</b>";
+  } else {
+    inputEl.placeholder = "e.g. cofdtld, drenth!   /   kem vlest ta.";
+    outLabel.textContent = "中文";
+    langtag.innerHTML = "input: <b>Cofdtld</b>";
+  }
+}
 
 function updateLangTag(){
+  if (mode !== "to-cof"){
+    langtag.innerHTML = "input: <b>Cofdtld</b>";
+    return;
+  }
   const v = inputEl.value.trim();
   if (!v){ langtag.innerHTML = "detected: <b>—</b>"; return; }
   langtag.innerHTML = isChinese(v)
     ? "detected: <b>中文</b>"
     : "detected: <b>English</b>";
 }
-inputEl.addEventListener("input", updateLangTag);
 
+/* ---------- 执行翻译 ---------- */
 function runTranslate(){
   const text = inputEl.value.trim();
   if (!text){ return; }
-  const zh = isChinese(text);
-  const res = zh ? translateChinese(text) : translateEnglish(text);
+
+  let res;
+  if (mode === "to-cof"){
+    res = isChinese(text) ? translateChinese(text) : translateEnglish(text);
+  } else if (mode === "to-en"){
+    res = translateCofdtld(text, "en");
+  } else {
+    res = translateCofdtld(text, "zh");
+  }
 
   outEl.innerHTML = res.output
     .split(/(\[\?[^\]]+\])/)
     .map(part => part.startsWith("[?") ? `<span class="unk">${part}</span>` : part)
     .join("");
 
-  glossEl.innerHTML = res.glosses.map(g =>
-    g.unk
-      ? `<span class="g-unk">${g.cof} <b>(${g.orig})</b></span>`
-      : `<span><b>${g.cof}</b> (${g.orig})</span>`
-  ).join("");
+  glossEl.innerHTML = res.glosses.map(g=>{
+    if (g.unk) return `<span class="g-unk">${g.cof} <b>(${g.orig})</b></span>`;
+    if (g.alts && g.alts.length){
+      return `<span><b>${g.cof}</b> (${g.orig}) <span class="alt">· ${g.alts.join(" / ")}</span></span>`;
+    }
+    return `<span><b>${g.cof}</b> (${g.orig})</span>`;
+  }).join("");
 
   resultEl.classList.add("show");
 }
 
+/* ---------- 事件 ---------- */
 document.getElementById("translate").addEventListener("click", runTranslate);
 document.getElementById("clear").addEventListener("click", ()=>{
   inputEl.value = ""; resultEl.classList.remove("show"); updateLangTag();
 });
+inputEl.addEventListener("input", updateLangTag);
 inputEl.addEventListener("keydown", e=>{
   if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) runTranslate();
 });
 
-/* 示例 */
-const EXAMPLES = [
-  "I love you",
-  "Hello, friend!",
-  "We drink water",
-  "They come with a friend",
-  "我爱你",
-  "你好，朋友！",
-  "我们喝水",
-  "他想要一本书"
-];
-const exWrap = document.getElementById("examples");
-EXAMPLES.forEach(s=>{
-  const b = document.createElement("button");
-  b.textContent = s;
-  b.addEventListener("click", ()=>{
-    inputEl.value = s; updateLangTag(); runTranslate();
-  });
-  exWrap.appendChild(b);
+modeTabs.addEventListener("click", e=>{
+  const btn = e.target.closest("button[data-mode]");
+  if (!btn) return;
+  const next = btn.dataset.mode;
+  if (next === mode) return;
+  mode = next;
+  [...modeTabs.children].forEach(b=>b.classList.toggle("active", b === btn));
+  inputEl.value = "";
+  resultEl.classList.remove("show");
+  updateLabels();
+  renderExamples();
+  updateLangTag();
+  inputEl.focus();
 });
 
-/* 词典 */
+/* ============================================================
+   词典
+   ============================================================ */
 const dictList = document.getElementById("dictlist");
 const dictSearch = document.getElementById("dictsearch");
 
@@ -436,7 +567,9 @@ function renderDict(q=""){
 dictSearch.addEventListener("input", e=>renderDict(e.target.value));
 renderDict();
 
-/* 初始化 */
+/* ---------- 初始化 ---------- */
+updateLabels();
+renderExamples();
 updateLangTag();
 </script>
 </body>
